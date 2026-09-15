@@ -1,869 +1,1236 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="tr.png">
-  <title>رماية التوقيت</title>                           
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Tajawal', 'system-ui', 'sans-serif'],
-          },
-        },
-      },
-    }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>نظام رماية التوقيت المعتمد</title>
   <style>
-    body {
-      font-family: 'Tajawal', system-ui, sans-serif;
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #38bdf8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
     }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+    header { background: #1e293b; border-bottom: 1px solid var(--card-border); padding: 12px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 50; }
+    .logo-group { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #0284c7, #38bdf8); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .title { font-size: 1.1rem; font-weight: 800; }
+    .badge { font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: var(--accent); padding: 2px 8px; border-radius: 9999px; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .nav-tabs { display: flex; gap: 8px; }
+    .tab-btn { background: #0f172a; color: var(--text-muted); border: 1px solid var(--card-border); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .container { max-width: 1000px; margin: 20px auto; padding: 0 16px; }
+    .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 800px) { .grid-layout { grid-template-columns: 320px 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* Stage Timer Card */
+    .timer-display { font-size: 3rem; font-weight: 900; font-family: monospace; text-align: center; color: var(--accent); margin: 15px 0; background: #0f172a; padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); letter-spacing: 2px; }
+    .timer-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .btn { padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.15s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-muted); }
+    .btn-outline:hover { background: #0f172a; color: var(--text); }
+    
+    /* Stages Table */
+    .stage-row { display: grid; grid-template-columns: 1fr 90px 70px 50px; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 0.85rem; }
+    .stage-row:last-child { border-bottom: none; }
+    .stage-info { display: flex; flex-direction: column; }
+    .stage-target { font-size: 0.72rem; color: var(--text-muted); }
+    .time-input { width: 100%; background: #0f172a; border: 1px solid var(--card-border); color: #fff; padding: 6px; border-radius: 6px; text-align: center; font-weight: bold; font-family: monospace; font-size: 0.95rem; }
+    .hit-toggle { background: #0f172a; border: 1px solid var(--card-border); color: var(--text-muted); border-radius: 6px; padding: 6px; cursor: pointer; font-weight: bold; }
+    .hit-toggle.hit { background: rgba(16, 185, 129, 0.2); color: var(--success); border-color: var(--success); }
+    .hit-toggle.miss { background: rgba(239, 68, 68, 0.2); color: var(--danger); border-color: var(--danger); }
+    .score-badge { font-weight: 900; font-size: 1.1rem; text-align: center; color: var(--accent); }
+    
+    /* Total Score Box */
+    .total-box { background: linear-gradient(135deg, #0284c7, #0369a1); border-radius: 10px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; color: white; }
+    .total-val { font-size: 2rem; font-weight: 900; }
+    
+    /* Shooters & Results Lists */
+    .item-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 400px; overflow-y: auto; }
+    .item-card { background: #0f172a; border: 1px solid var(--card-border); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+    .input-field { width: 100%; background: #0f172a; border: 1px solid var(--card-border); color: #fff; padding: 9px 12px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9rem; }
+    
+    /* Shooters Table */
+    .shooters-table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.88rem; }
+    .shooters-table th { background: #0b1329; color: var(--text-muted); padding: 10px 12px; font-weight: 700; border-bottom: 1px solid var(--card-border); }
+    .shooters-table td { padding: 11px 12px; border-bottom: 1px solid #1e293b; color: var(--text); }
+    .shooters-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .tag-rank { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
+    .tag-number { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; font-family: monospace; font-weight: bold; }
+    .tag-team { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal-overlay.active { display: flex; }
+    .modal-box { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; max-width: 500px; width: 100%; }
+    .modal-box h3 { margin-bottom: 16px; font-size: 1.1rem; }
+
+    /* Professional polish layer */
+    :root {
+      --bg: #07111f;
+      --bg-soft: #0b1728;
+      --card: rgba(17, 32, 53, .88);
+      --card-border: rgba(148, 163, 184, .16);
+      --primary: #0ea5e9;
+      --primary-hover: #0284c7;
+      --accent: #67e8f9;
+      --success: #22c55e;
+      --danger: #f43f5e;
+      --warning: #fbbf24;
+      --text: #f8fafc;
+      --text-muted: #9aabc0;
+      --shadow: 0 18px 50px rgba(0,0,0,.20);
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    html { scroll-behavior: smooth; }
+    body { background: radial-gradient(circle at 85% -10%, rgba(14,165,233,.15), transparent 35%), linear-gradient(180deg, #07111f 0%, #0a1424 100%); color: var(--text); }
+    body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .18; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 36px 36px; mask-image: linear-gradient(to bottom, black, transparent 70%); }
+    header { background: rgba(7,17,31,.82); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(148,163,184,.15); padding: 14px max(20px, calc((100% - 1120px)/2)); box-shadow: 0 8px 30px rgba(0,0,0,.12); }
+    .logo-group { gap: 12px; }
+    .logo-icon { width: 42px; height: 42px; border-radius: 12px; box-shadow: 0 8px 24px rgba(14,165,233,.3); }
+    .title { letter-spacing: -.02em; }
+    .title::after { content: ' • لوحة تحكم العمليات'; color: var(--text-muted); font-size: .68rem; font-weight: 500; display: block; margin-top: 2px; }
+    .nav-tabs { background: rgba(15,23,42,.65); border: 1px solid var(--card-border); border-radius: 12px; padding: 4px; gap: 3px; }
+    .tab-btn { border: 0; background: transparent; border-radius: 9px; padding: 9px 15px; }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.06); }
+    .tab-btn.active { background: linear-gradient(135deg, var(--primary), #2563eb); box-shadow: 0 5px 16px rgba(14,165,233,.25); }
+    .container { max-width: 1120px; margin: 28px auto; padding: 0 18px; position: relative; z-index: 1; }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+    .card-title { font-size: 1.03rem; }
+    .grid-layout { gap: 22px; }
+    .timer-display { background: linear-gradient(145deg, #06101d, #0c1d31); border-color: rgba(103,232,249,.2); box-shadow: inset 0 0 28px rgba(14,165,233,.08); font-size: clamp(2.8rem, 6vw, 4.5rem); padding: 18px 12px; text-shadow: 0 0 20px rgba(103,232,249,.32); }
+    .btn { border-radius: 10px; min-height: 40px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary, .btn-success, .btn-danger { box-shadow: 0 7px 18px rgba(0,0,0,.14); }
+    .btn-primary { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+    .btn-success { background: linear-gradient(135deg, #16a34a, #059669); }
+    .btn-danger { background: linear-gradient(135deg, #e11d48, #be123c); }
+    .btn-outline { border-color: rgba(148,163,184,.24); background: rgba(15,23,42,.42); }
+    .stage-row { padding: 12px 0; border-bottom-color: rgba(148,163,184,.12); transition: background .18s, padding .18s; border-radius: 10px; }
+    .stage-row:hover { background: rgba(14,165,233,.06); padding-inline: 8px; }
+    .stage-row:has(.time-input:focus) { background: rgba(14,165,233,.09); }
+    .time-input, .input-field, select { background: rgba(4,12,24,.72); border-color: rgba(148,163,184,.2); }
+    .time-input:focus, .input-field:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(103,232,249,.12); }
+    .total-box { background: linear-gradient(135deg, #0369a1, #1d4ed8); box-shadow: 0 14px 30px rgba(3,105,161,.22); border-radius: 14px; }
+    .item-card, .shooters-table th { background: rgba(4,12,24,.48); }
+    .shooters-table th { position: sticky; top: 0; z-index: 1; }
+    .shooters-table td { border-bottom-color: rgba(148,163,184,.1); }
+    .shooters-table tr { transition: background .15s; }
+    .shooters-table tr:hover td { background: rgba(14,165,233,.06); }
+    .modal-box { box-shadow: 0 24px 80px rgba(0,0,0,.45); }
+    .badge { white-space: nowrap; }
+    @media (max-width: 799px) {
+      header { padding: 12px 14px; }
+      header, .nav-tabs { gap: 10px; }
+      .nav-tabs { width: 100%; overflow-x: auto; }
+      .tab-btn { flex: 1; white-space: nowrap; }
+      .container { margin-top: 18px; padding: 0 12px; }
+      .card { padding: 16px; border-radius: 14px; }
+      .stage-row { grid-template-columns: minmax(0,1fr) 70px 62px 36px; gap: 5px; }
+      .stage-info strong { font-size: .78rem; }
+      .stage-target { font-size: .65rem; }
+      .timer-display { margin: 10px 0 14px; }
     }
-    .page {
-      display: none;
-    }
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.7);
-        align-items: center;
-        justify-content: center;
+    @media (max-width: 430px) {
+      .logo-icon { width: 36px; height: 36px; font-size: 17px; }
+      .title { font-size: .95rem; }
+      .title::after { display: none; }
+      .stage-row { grid-template-columns: 1fr 64px 58px 30px; }
+      .hit-toggle { font-size: .68rem; padding: 6px 3px; }
+      .time-input { font-size: .82rem; padding: 6px 2px; }
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-200 min-h-screen">
-  <header class="bg-slate-800 shadow-lg sticky top-0 z-50">
-    <nav class="container mx-auto flex justify-between items-center p-3">
-      <h1 class="text-2xl font-bold text-sky-200">رماية التوقيت</h1>
-      <div class="flex gap-2">
-        <a id="nav-entry" href="#entry" class="px-3 py-2 rounded-md text-sm font-small transition-colors">
-          تسجيل النتائج
-        </a>
-        <a id="nav-results" href="#results" class="px-3 py-2 rounded-md text-sm font-small transition-colors">
-          النتائج المحفوظة
-        </a>
+<body>
+  <header>
+    <div class="logo-group">
+      <div class="logo-icon">🎯</div>
+      <div>
+        <div class="title">رماية التوقيت <span class="badge">النظام المعتمد</span></div>
       </div>
-    </nav>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="showTab('scoring', this)">تسجيل النتائج</button>
+      <button class="tab-btn" onclick="showTab('shooters', this)">الرماة</button>
+      <button class="tab-btn" onclick="showTab('results', this)">النتائج</button>
+    </div>
   </header>
-  
-  <main class="container mx-auto p-4 md:p-6">
-    <!-- Score Entry Page -->
-    <div id="page-entry" class="page">
-      <div class="max-w-4xl mx-auto bg-slate-800 p-4 md:p-6 rounded-lg shadow-xl">
-        <h2 id="entry-title" class="text-2xl md:text-3xl font-bold mb-6 text-center text-sky-400">
-          تسجيل نتائج الرماية
-        </h2>
-        
-        <div class="mb-4">
-          <label for="shooterNameSelect" class="block text-base md:text-lg font-medium text-slate-300 mb-2">اسم الرامي</label>
-          <div class="space-y-2">
-            <!-- حقل البحث السريع عن اسم الرامي -->
-            <div class="relative flex items-center">
-              <input
-                type="text"
-                id="shooter-search-input"
-                placeholder="🔍 ابحث عن اسم الرامي..."
-                autocomplete="off"
-                class="w-full bg-slate-700/90 border border-slate-600 rounded-md py-2 px-3 pl-8 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
-              />
-              <button
-                type="button"
-                id="clear-search-button"
-                class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs bg-slate-600/70 rounded-full w-5 h-5 flex items-center justify-center transition-colors hidden"
-                title="مسح البحث"
-              >✕</button>
-            </div>
 
-            <div class="flex gap-2">
-              <select id="shooterNameSelect" class="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                <!-- Options will be populated by JS -->
-              </select>
-              <button id="manage-shooters-button" class="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg transition-colors whitespace-nowrap">
-                إدارة
-              </button>
+  <div class="container">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;background:linear-gradient(135deg,rgba(14,165,233,.12),rgba(30,64,175,.12));border-color:rgba(103,232,249,.18);">
+      <div><div style="font-size:.76rem;color:var(--accent);font-weight:800;letter-spacing:.08em;">CONTROL CENTER</div><div style="font-size:1.05rem;font-weight:800;margin-top:3px;">إدارة الرماية والنتائج</div></div>
+      <div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:.82rem;"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 12px var(--success);"></span><span>النظام جاهز للتشغيل</span><span id="today-date" style="padding-inline-start:10px;border-inline-start:1px solid var(--card-border);"></span></div>
+    </div>
+    <!-- SCORING TAB -->
+    <div id="tab-scoring">
+      <div class="grid-layout">
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>مؤقت المرحلة</span>
+              <span id="active-stage-label" class="badge">المرحلة 1</span>
             </div>
+            <div id="timer-val" class="timer-display">0.00</div>
+            <div style="margin-bottom: 10px;">
+              <button id="btn-timer-toggle" class="btn btn-success" style="width:100%; font-size:1.1rem; padding:14px" onclick="toggleTimer()">▶ بدء التوقيت (المرحلة 1)</button>
+            </div>
+            <button class="btn btn-outline" style="width:100%" onclick="resetTimer()">إعادة ضبط المؤقت</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">اختيار الرامي</div>
+            <select id="shooter-select" class="input-field" onchange="onSelectShooter()">
+              <option value="">-- اختر رامي من القائمة --</option>
+            </select>
+            <input type="text" id="manual-name" class="input-field" placeholder="أو اكتب اسم الرامي هنا مباشرة">
           </div>
         </div>
 
-        <div class="hidden md:grid grid-cols-12 gap-2 text-center mb-2 font-bold text-slate-400 text-sm">
-          <div class="col-span-2">المرحلة</div>
-          <div class="col-span-3">الوقت (ث)</div>
-          <div class="col-span-4">الإصابة</div>
-          <div class="col-span-3">النقاط</div>
-        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>المراحل الخمس وقواعد التوقيت</span>
+              <button class="btn btn-outline" style="font-size:0.75rem; padding:4px 8px" onclick="resetForm()">تفريغ المراحل</button>
+            </div>
 
-        <div id="stages-container" class="space-y-2">
-          <!-- Stages will be dynamically inserted here -->
-        </div>
+            <div class="stage-row" onclick="selectStage(0)">
+              <div class="stage-info">
+                <strong>المرحلة 1: طلقة واحدة</strong>
+                <span class="stage-target">الوقت الأساسي: 3.04 ثانية (-1 لكل 0.05ث)</span>
+              </div>
+              <input type="number" step="0.01" class="time-input" id="time-0" placeholder="0.00" oninput="calculateTotal()">
+              <button class="hit-toggle hit" id="hit-0" onclick="toggleHit(0)">إصابة</button>
+              <div class="score-badge" id="score-0">0</div>
+            </div>
 
-        <div class="mt-8 text-center bg-slate-900/70 p-4 rounded-lg">
-          <h3 class="text-2xl font-bold text-slate-300">النتيجة الإجمالية</h3>
-          <p class="text-5xl font-bold text-sky-400 mt-2"><span id="total-score">0</span> <span class="text-5xl text-slate-400">/ 50</span></p>
-        </div>
+            <div class="stage-row" onclick="selectStage(1)">
+              <div class="stage-info">
+                <strong>المرحلة 2: طلقتان</strong>
+                <span class="stage-target">الوقت الأساسي: 5.09 ثانية (-1 لكل 0.10ث)</span>
+              </div>
+              <input type="number" step="0.01" class="time-input" id="time-1" placeholder="0.00" oninput="calculateTotal()">
+              <button class="hit-toggle hit" id="hit-1" onclick="toggleHit(1)">إصابة</button>
+              <div class="score-badge" id="score-1">0</div>
+            </div>
 
-        <div class="mt-8 flex justify-center gap-4">
-          <button id="save-button" class="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors">
-            حفظ النتيجة
-          </button>
-          <button id="reset-button" class="bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-2 rounded-lg transition-colors">
-            مسح
-          </button>
+            <div class="stage-row" onclick="selectStage(2)">
+              <div class="stage-info">
+                <strong>المرحلة 3: طلقة واحدة</strong>
+                <span class="stage-target">الوقت الأساسي: 3.04 ثانية (-1 لكل 0.05ث)</span>
+              </div>
+              <input type="number" step="0.01" class="time-input" id="time-2" placeholder="0.00" oninput="calculateTotal()">
+              <button class="hit-toggle hit" id="hit-2" onclick="toggleHit(2)">إصابة</button>
+              <div class="score-badge" id="score-2">0</div>
+            </div>
+
+            <div class="stage-row" onclick="selectStage(3)">
+              <div class="stage-info">
+                <strong>المرحلة 4: طلقتان</strong>
+                <span class="stage-target">الوقت الأساسي: 5.09 ثانية (-1 لكل 0.10ث)</span>
+              </div>
+              <input type="number" step="0.01" class="time-input" id="time-3" placeholder="0.00" oninput="calculateTotal()">
+              <button class="hit-toggle hit" id="hit-3" onclick="toggleHit(3)">إصابة</button>
+              <div class="score-badge" id="score-3">0</div>
+            </div>
+
+            <div class="stage-row" onclick="selectStage(4)">
+              <div class="stage-info">
+                <strong>المرحلة 5: طلقة واحدة</strong>
+                <span class="stage-target">الوقت الأساسي: 3.04 ثانية (-1 لكل 0.05ث)</span>
+              </div>
+              <input type="number" step="0.01" class="time-input" id="time-4" placeholder="0.00" oninput="calculateTotal()">
+              <button class="hit-toggle hit" id="hit-4" onclick="toggleHit(4)">إصابة</button>
+              <div class="score-badge" id="score-4">0</div>
+            </div>
+
+            <div class="total-box">
+              <div>
+                <div style="font-weight:700">المجموع الكلي</div>
+                <div style="font-size:0.8rem; opacity:0.85">من 50 نقطة كحد أقصى</div>
+              </div>
+              <div class="total-val" id="total-score-val">0</div>
+            </div>
+
+            <button class="btn btn-success" style="width:100%; margin-top:14px" onclick="saveCurrentScore()">💾 حفظ نتيجة الرامي</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Results Page -->
-    <div id="page-results" class="page">
-      <div class="max-w-7xl mx-auto bg-slate-800 p-4 md:p-6 rounded-lg shadow-xl">
-        <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-sky-400">النتائج المحفوظة</h2>
-          <div id="results-actions" class="flex flex-wrap gap-2" style="display: none;">
-             <button id="export-csv-button" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">
-              تصدير CSV
+    <!-- SHOOTERS TAB -->
+    <div id="tab-shooters" style="display:none">
+      <div class="card" style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+          <div style="flex: 1; min-width: 250px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="font-size: 1.5rem;">👥</span>
+              <h2 style="font-size: 1.3rem; font-weight: 800; margin: 0;">صفحة وسجل الرماة</h2>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              إضافة وإدارة بيانات الرماة (الاسم الكامل، الرتبة، الرقم التعريفي، الفريق) مع استيراد وتصدير الإكسل.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start;">
+            <button class="btn btn-primary" style="padding: 10px 20px; font-size: 0.9rem;" onclick="focusAddShooter()">
+              <span>👤</span> إضافة رامي جديد
             </button>
-            <button id="clear-all-button" class="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">
-              <span role="img" aria-hidden="true">🗑️</span>
-              مسح الكل
+            <button class="btn btn-success" style="padding: 10px 20px; font-size: 0.9rem;" onclick="importShootersExcel()">
+              <span>📥</span> استيراد ملف إكسل
+            </button>
+            <button class="btn btn-outline" style="padding: 10px 20px; font-size: 0.9rem; border-color: var(--card-border);" onclick="exportShootersExcel()">
+              <span>📤</span> تصدير إكسل
             </button>
           </div>
         </div>
-        
-        <div id="results-content">
-            <!-- Results will be dynamically inserted here -->
-        </div>
+      </div>
 
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px;">
+        <div class="card" style="text-align: center; padding: 14px;">
+          <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent);" id="stat-total-shooters">0</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">إجمالي الرماة</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 14px;">
+          <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent);" id="stat-teams-count">0</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">عدد الفرق</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 14px;">
+          <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent);" id="stat-filtered-shooters">0</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">الرماة المطابقون للبحث</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 14px;">
+          <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent);" id="stat-scored-shooters">0</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">إجمالي الرمايات المسجلة</div>
+        </div>
+      </div>
+
+      <div class="card" id="add-shooter-card">
+        <div class="card-title">إضافة رامي جديد إلى الكشف</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-bottom:10px">
+          <input type="text" id="new-shooter-name" class="input-field" placeholder="الاسم الكامل للرامي *" style="margin-bottom:0">
+          <input type="text" id="new-shooter-rank" class="input-field" placeholder="الرتبة (مثال: ملازم أول)" style="margin-bottom:0">
+          <input type="text" id="new-shooter-number" class="input-field" placeholder="الرقم التعريفي (مثال: 101)" style="margin-bottom:0">
+          <input type="text" id="new-shooter-team" class="input-field" placeholder="الفريق (مثال: فريق أ)" style="margin-bottom:0">
+        </div>
+        <button class="btn btn-primary" id="add-shooter-btn" onclick="addShooter()">+ إضافة الرامي إلى القائمة</button>
+      </div>
+
+      <div class="card" style="padding: 14px 18px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 2; min-width: 200px;">
+            <span style="font-size: 1.1rem; color: var(--text-muted);">🔍</span>
+            <input type="text" id="shooter-search-input" class="input-field" placeholder="ابحث بالاسم، الرتبة، الرقم التعريفي أو الفريق..." style="margin-bottom: 0; flex: 1;" oninput="renderShooters()">
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">تصفية الفريق:</span>
+            <div id="team-filter-buttons" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+          <table class="shooters-table" style="width: 100%; min-width: 700px;">
+            <thead>
+              <tr>
+                <th style="width: 40px;">#</th>
+                <th>الاسم الكامل</th>
+                <th>الرتبة</th>
+                <th>الرقم التعريفي</th>
+                <th>الفريق</th>
+                <th style="text-align: center;">الرمايات المسجلة</th>
+                <th style="text-align: center; width: 160px;">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="shooters-list-ui"></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </main>
-  
-  <!-- Shooters Management Modal -->
-  <div id="shooters-modal" class="modal">
-    <div class="bg-slate-800 rounded-lg shadow-xl p-4 md:p-6 w-11/12 max-w-md m-4">
-        <h3 class="text-xl md:text-2xl font-bold text-sky-400 mb-4 text-center">إدارة الرماة</h3>
-        
-        <div class="flex gap-2 mb-4">
-            <input type="text" id="new-shooter-name-input" placeholder="اسم الرامي الجديد" class="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-            <button id="add-shooter-button" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded-lg transition-colors">إضافة</button>
-        </div>
 
-        <div class="mb-4">
-            <button id="import-shooters-button" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">استيراد قائمة من ملف (.txt)</button>
-            <input type="file" id="shooters-file-input" accept=".txt" class="hidden">
-            <p class="text-xs text-slate-400 mt-1 text-center">يجب أن يحتوي الملف على اسم واحد في كل سطر.</p>
+    <!-- RESULTS TAB -->
+    <div id="tab-results" style="display:none">
+      <div class="card" style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+          <div style="flex: 1; min-width: 250px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="font-size: 1.5rem;">📊</span>
+              <h2 style="font-size: 1.3rem; font-weight: 800; margin: 0;">سجل النتائج المحفوظة</h2>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              استعراض نتائج رمايات التوقيت، المقارنة، والترتيب مع إمكانية تصدير التقارير إلى Excel و CSV.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start;">
+            <button class="btn btn-success" style="padding: 10px 20px; font-size: 0.9rem;" onclick="exportResultsExcel()">
+              <span>📥</span> تصدير (xlsx) Excel
+            </button>
+            <button class="btn btn-outline" style="padding: 10px 20px; font-size: 0.9rem; border-color: var(--card-border);" onclick="exportResultsCSV()">
+              <span>📄</span> تصدير CSV
+            </button>
+            <button class="btn btn-danger" style="padding: 10px 20px; font-size: 0.9rem;" onclick="clearAllScores()">
+              <span>🗑️</span> مسح الكل
+            </button>
+          </div>
         </div>
+      </div>
 
-        <h4 class="text-base md:text-lg font-semibold text-slate-300 mb-2 border-t border-slate-700 pt-3">قائمة الرماة</h4>
-        <div id="shooters-list-container" class="max-h-60 overflow-y-auto no-scrollbar bg-slate-900 p-2 rounded-md space-y-2">
-            <!-- Shooters list will be rendered here -->
+      <div class="card" style="padding: 14px 18px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 2; min-width: 200px;">
+            <span style="font-size: 1.1rem; color: var(--text-muted);">🔍</span>
+            <input type="text" id="results-search-input" class="input-field" placeholder="ابحث باسم الرامي، الرقم أو الفريق..." style="margin-bottom: 0; flex: 1;" oninput="renderResults()">
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">الفريق:</span>
+            <select id="results-filter-team" class="input-field" style="margin-bottom: 0; width: 140px;" onchange="renderResults()">
+              <option value="">جميع الفرق</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">ترتيب:</span>
+            <select id="results-sort-order" class="input-field" style="margin-bottom: 0; width: 140px;" onchange="renderResults()">
+              <option value="newest">الأحدث</option>
+              <option value="highest">الأعلى نقاطاً</option>
+              <option value="lowest">الأدنى نقاطاً</option>
+            </select>
+          </div>
         </div>
-        
-        <div class="mt-6 text-center">
-            <button id="close-modal-button" class="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">إغلاق</button>
+        <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); text-align: left;">
+          عرض <span id="results-count">0</span> من إجمالي <span id="results-total">0</span> نتيجة
         </div>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+          <table class="shooters-table" style="width: 100%; min-width: 700px;">
+            <thead>
+              <tr>
+                <th style="width: 40px;">#</th>
+                <th>الرامي وبياناته</th>
+                <th>التاريخ</th>
+                <th style="text-align: center;">1م<br><span style="font-size: 0.7rem; font-weight: normal;">(3.04≥)</span></th>
+                <th style="text-align: center;">2م<br><span style="font-size: 0.7rem; font-weight: normal;">(5.09≥)</span></th>
+                <th style="text-align: center;">3م<br><span style="font-size: 0.7rem; font-weight: normal;">(3.04≥)</span></th>
+                <th style="text-align: center;">4م<br><span style="font-size: 0.7rem; font-weight: normal;">(5.09≥)</span></th>
+                <th style="text-align: center;">5م<br><span style="font-size: 0.7rem; font-weight: normal;">(3.04≥)</span></th>
+                <th style="text-align: center;">الإجمالي</th>
+                <th style="text-align: center; width: 100px;">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="results-table-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
-  
-<script type="module">
-  const SCORES_STORAGE_KEY = 'tas-timer-scores';
-  const SHOOTERS_STORAGE_KEY = 'tas-shooters-list';
-  
-  // --- STATE MANAGEMENT ---
-  let allScores = [];
-  let shootersList = [];
-  let currentEditId = null;
-  let currentShooterName = '';
-  let shooterSearchQuery = '';
-  let currentStages = Array(5).fill({ time: '', hit: true });
-  let currentSortBy = 'date';
 
-  // --- DOM ELEMENTS ---
-  const shooterNameSelect = document.getElementById('shooterNameSelect');
-  const shooterSearchInput = document.getElementById('shooter-search-input');
-  const clearSearchButton = document.getElementById('clear-search-button');
-  const stagesContainer = document.getElementById('stages-container');
-  const totalScoreEl = document.getElementById('total-score');
-  const saveButton = document.getElementById('save-button');
-  const resetButton = document.getElementById('reset-button');
-  const entryTitle = document.getElementById('entry-title');
-  const resultsContent = document.getElementById('results-content');
-  const resultsActions = document.getElementById('results-actions');
-  const shootersModal = document.getElementById('shooters-modal');
-  const newShooterNameInput = document.getElementById('new-shooter-name-input');
-  const shootersListContainer = document.getElementById('shooters-list-container');
-  const shootersFileInput = document.getElementById('shooters-file-input');
-
-
-  // --- SCORE CALCULATION LOGIC ---
-  const calculateStageScore = (stageIndex, timeStr, hit) => {
-    if (!hit || timeStr === '' || isNaN(parseFloat(timeStr))) return 0;
-    const time = parseFloat(timeStr);
-    const timeInHundredths = Math.round(time * 100);
-
-    if (stageIndex === 0 || stageIndex === 2 || stageIndex === 4) {
-      if (timeInHundredths <= 304) return 10;
-      const penalty = Math.ceil((timeInHundredths - 304) / 5);
-      return Math.max(0, 10 - penalty);
-    }
-    if (stageIndex === 1 || stageIndex === 3) {
-      if (timeInHundredths <= 509) return 10;
-      const penalty = Math.ceil((timeInHundredths - 509) / 10);
-      return Math.max(0, 10 - penalty);
-    }
-    return 0;
-  };
-
-  // --- RENDER FUNCTIONS ---
-  function renderEntryForm(focusedInputIndex = null) {
-    stagesContainer.innerHTML = '';
-    let totalScore = 0;
-    
-    populateShooterDropdown();
-
-    currentStages.forEach((stage, index) => {
-      const stageScore = calculateStageScore(index, stage.time, stage.hit);
-      totalScore += stageScore;
-      
-      const scoreColorClass = stageScore === 10 ? 'bg-green-500 text-white' : stageScore > 0 ? 'bg-amber-500 text-slate-900' : 'bg-red-600 text-white';
-
-      const stageEl = document.createElement('div');
-      stageEl.className = 'grid grid-cols-12 gap-2 items-center bg-slate-700/50 p-2 rounded-md';
-      stageEl.innerHTML = `
-        <div class="col-span-2 text-center font-bold text-sm sm:text-base">
-          <span class="md:hidden">م${index + 1}</span>
-          <span class="hidden md:inline">المرحلة ${index + 1}</span>
-        </div>
-        <div class="col-span-3">
-          <input
-            type="text"
-            inputMode="decimal"
-            value="${stage.time}"
-            placeholder="0.00"
-            class="stage-time-input w-full bg-slate-900 border border-slate-600 rounded-md py-2 px-2 text-center text-white focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm sm:text-base"
-            data-index="${index}"
-          />
-        </div>
-        <div class="col-span-4 grid grid-cols-2 gap-1">
-          <button class="hit-button py-2 px-1 rounded-md transition-all text-sm ${stage.hit ? 'bg-green-600 text-white ring-2 ring-white' : 'bg-slate-600 hover:bg-green-700'}" data-index="${index}" data-hit="true" aria-label="إصابة">
-            <span role="img" aria-hidden="true">✔️</span>
-            <span class="hidden sm:inline"> إصابة</span>
-          </button>
-          <button class="hit-button py-2 px-1 rounded-md transition-all text-sm ${!stage.hit ? 'bg-red-600 text-white ring-2 ring-white' : 'bg-slate-600 hover:bg-red-700'}" data-index="${index}" data-hit="false" aria-label="عدم إصابة">
-            <span role="img" aria-hidden="true">❌</span>
-            <span class="hidden sm:inline"> خطأ</span>
-          </button>
-        </div>
-        <div class="col-span-3 flex justify-center">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${scoreColorClass} shadow-lg">
-            ${stageScore}
-          </div>
-        </div>
-      `;
-      stagesContainer.appendChild(stageEl);
-    });
-    
-    totalScoreEl.textContent = totalScore;
-    updateSaveButtonState();
-
-    if (focusedInputIndex !== null) {
-      const inputToFocus = stagesContainer.querySelector(`.stage-time-input[data-index="${focusedInputIndex}"]`);
-      if (inputToFocus) {
-        inputToFocus.focus();
-        const len = inputToFocus.value.length;
-        inputToFocus.setSelectionRange(len, len);
-      }
-    }
-  }
-  
-  function renderResults() {
-    if (allScores.length === 0) {
-      resultsContent.innerHTML = `<p class="text-center text-slate-400 text-lg">لا توجد نتائج محفوظة حتى الآن.</p>`;
-      resultsActions.style.display = 'none';
-      return;
-    }
-
-    resultsActions.style.display = 'flex';
-    const sortedScores = [...allScores].sort((a, b) => {
-      if (currentSortBy === 'score') return b.totalScore - a.totalScore;
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-
-    const formatDate = (dateString) => new Date(dateString).toLocaleString('ar-EG', {
-        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
-
-    const mobileHTML = sortedScores.map(score => `
-      <div class="bg-slate-700/50 p-3 rounded-lg shadow-md">
-        <div class="flex justify-between items-center gap-2">
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-white truncate">${score.name}</p>
-            <p class="text-[11px] text-slate-400 truncate">${formatDate(score.date)}</p>
-          </div>
-          <div class="text-center">
-            <p class="text-xl font-bold text-sky-400">${score.totalScore}</p>
-          </div>
-          <div class="flex items-center gap-1">
-            <a href="#edit/${score.id}" class="bg-blue-600 hover:bg-blue-500 text-white p-1.5 rounded-full h-8 w-8 flex items-center justify-center" aria-label="تعديل نتيجة ${score.name}">
-              <span role="img" aria-hidden="true" class="text-base">✏️</span>
-            </a>
-            <button data-id="${score.id}" data-name="${score.name}" class="delete-button bg-red-700 hover:bg-red-600 text-white p-1.5 rounded-full h-8 w-8 flex items-center justify-center" aria-label="حذف نتيجة ${score.name}">
-              <span role="img" aria-hidden="true" class="text-base">🗑️</span>
-            </button>
-          </div>
-        </div>
-        <div class="mt-3 pt-3 border-t border-slate-600">
-          <div class="grid grid-cols-5 gap-1">
-            ${score.stages.map((stage, index) => {
-              const stageScore = calculateStageScore(index, stage.time, stage.hit);
-              return `
-                <div class="text-center bg-slate-800 p-1 rounded-md flex flex-col justify-center">
-                  <p class="text-xs font-bold text-slate-400 truncate">م ${index + 1}</p>
-                  <p class="text-sm font-bold text-sky-400">${stageScore} <span class="text-[10px] text-slate-400">ن</span></p>
-                  <p class="text-[11px] font-semibold text-white">${stage.time} ث</p>
-                </div>`;
-            }).join('')}
-          </div>
-        </div>
+  <!-- Modal for encoding selection -->
+  <div class="modal-overlay" id="encoding-modal">
+    <div class="modal-box">
+      <h3>🔤 اختر ترميز الملف</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">
+        إذا ظهرت الأسماء برموز غريبة، جرب تغيير الترميز:
+      </p>
+      <select id="encoding-select" class="input-field" style="margin-bottom: 16px;">
+        <option value="UTF-8">UTF-8 (افتراضي)</option>
+        <option value="windows-1256">Windows-1256 (عربي)</option>
+        <option value="ISO-8859-6">ISO-8859-6 (عربي)</option>
+        <option value="windows-1252">Windows-1252 (أوروبي)</option>
+      </select>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="confirmImport()">استيراد</button>
+        <button class="btn btn-outline" style="flex: 1;" onclick="closeEncodingModal()">إلغاء</button>
       </div>
-    `).join('');
+    </div>
+  </div>
 
-    const desktopHTML = `
-      <table class="w-full text-sm text-left text-slate-400">
-        <thead class="text-xs text-slate-300 uppercase bg-slate-700/50">
-          <tr>
-            <th scope="col" class="px-4 py-3">الرامي</th>
-            <th scope="col" class="px-4 py-3">التاريخ</th>
-            ${[...Array(5)].map((_, i) => `<th scope="col" class="px-2 py-3 text-center">المرحلة ${i + 1}</th>`).join('')}
-            <th scope="col" class="px-3 py-3 text-center">الإجمالي</th>
-            <th scope="col" class="px-4 py-3 text-center">إجراءات</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sortedScores.map(score => `
-            <tr class="bg-slate-800 border-b border-slate-700 hover:bg-slate-700/50 transition-colors">
-              <td class="px-4 py-3 font-medium text-white whitespace-nowrap">${score.name}</td>
-              <td class="px-4 py-3 text-xs">${formatDate(score.date)}</td>
-              ${score.stages.map((stage, index) => {
-                const stageScore = calculateStageScore(index, stage.time, stage.hit);
-                return `
-                  <td class="px-2 py-3 text-center">
-                    <div class="font-bold text-sky-400">${stageScore} ن</div>
-                    <div class="text-xs text-slate-300">${stage.time} ث</div>
-                  </td>`;
-              }).join('')}
-              <td class="px-3 py-3 text-center font-bold text-lg text-sky-400">${score.totalScore}</td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex justify-center items-center gap-2">
-                  <a href="#edit/${score.id}" class="p-2 rounded-full hover:bg-blue-500/50" aria-label="تعديل نتيجة ${score.name}">
-                    <span role="img" aria-hidden="true" class="text-xl">✏️</span>
-                  </a>
-                  <button data-id="${score.id}" data-name="${score.name}" class="delete-button p-2 rounded-full hover:bg-red-500/50" aria-label="حذف نتيجة ${score.name}">
-                    <span role="img" aria-hidden="true" class="text-xl">🗑️</span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+  <script>
+    // Storage with safe fallback for file:// protocol
+    const memory = {};
+    function dbGet(k) { try { return localStorage.getItem(k); } catch(e) { return memory[k] || null; } }
+    function dbSet(k, v) { try { localStorage.setItem(k, v); } catch(e) {} memory[k] = v; }
 
-    resultsContent.innerHTML = `
-        <div class="flex justify-end gap-4 mb-4">
-            <span class="self-center text-slate-300">ترتيب حسب:</span>
-            <button id="sort-date-button" class="px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentSortBy === 'date' ? 'bg-sky-600 text-white' : 'bg-slate-700 hover:bg-slate-600'}">
-              الأحدث
-            </button>
-            <button id="sort-score-button" class="px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentSortBy === 'score' ? 'bg-sky-600 text-white' : 'bg-slate-700 hover:bg-slate-600'}">
-              الأعلى نقاطاً
-            </button>
-        </div>
-        <div class="space-y-3 md:hidden">${mobileHTML}</div>
-        <div class="hidden md:block overflow-x-auto">${desktopHTML}</div>
-    `;
-
-    document.getElementById('sort-date-button').addEventListener('click', () => handleSort('date'));
-    document.getElementById('sort-score-button').addEventListener('click', () => handleSort('score'));
-    document.querySelectorAll('.delete-button').forEach(btn => btn.addEventListener('click', handleDeleteClick));
-  }
-
-  // --- SHOOTER MANAGEMENT ---
-  function renderShootersListInModal() {
-    shootersListContainer.innerHTML = '';
-    if (shootersList.length === 0) {
-        shootersListContainer.innerHTML = `<p class="text-center text-slate-400 p-4">لا يوجد رماة محفوظون.</p>`;
-        return;
+    // Audio Buzzer
+    let audioCtx = null;
+    function playBuzzer() {
+      try {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx && AudioClass) audioCtx = new AudioClass();
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(950, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc.start();
+        setTimeout(() => { try { osc.stop(); } catch(e){} }, 450);
+      } catch(e) {}
     }
-    shootersList.forEach(name => {
-        const shooterEl = document.createElement('div');
-        shooterEl.className = 'flex justify-between items-center bg-slate-800 p-2 rounded';
-        shooterEl.innerHTML = `
-            <span class="text-white">${name}</span>
-            <button data-name="${name}" class="delete-shooter-button text-red-400 hover:text-red-300" aria-label="حذف ${name}">
-                <span role="img" aria-hidden="true">🗑️</span>
-            </button>
-        `;
-        shootersListContainer.appendChild(shooterEl);
-    });
-    document.querySelectorAll('.delete-shooter-button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const nameToDelete = e.currentTarget.dataset.name;
-            handleDeleteShooter(nameToDelete);
-        });
-    });
-  }
 
-  function handleAddShooter() {
-    const name = newShooterNameInput.value.trim();
-    if (name && !shootersList.includes(name)) {
-        shootersList.push(name);
-        shootersList.sort((a, b) => a.localeCompare(b, 'ar'));
-        saveShootersToLocalStorage();
-        renderShootersListInModal();
-        populateShooterDropdown();
-        newShooterNameInput.value = '';
-    } else if (shootersList.includes(name)) {
-        alert('هذا الاسم موجود بالفعل.');
+    // State
+    let currentStage = 0;
+    let timerRunning = false;
+    let timerStartTime = 0;
+    let timerInterval = null;
+    let hits = [true, true, true, true, true];
+    let activeTeamFilter = '';
+    let editingShooterIdx = null;
+    let pendingImportFile = null;
+
+    function showTab(tab, button) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const activeButton = button || document.querySelector('.tab-btn[onclick*=\"' + tab + '\"]');
+      if (activeButton) activeButton.classList.add('active');
+      document.getElementById('tab-scoring').style.display = tab === 'scoring' ? 'block' : 'none';
+      document.getElementById('tab-shooters').style.display = tab === 'shooters' ? 'block' : 'none';
+      document.getElementById('tab-results').style.display = tab === 'results' ? 'block' : 'none';
+      if (tab === 'shooters') renderShooters();
+      if (tab === 'results') renderResults();
     }
-  }
 
-  function handleDeleteShooter(nameToDelete) {
-    if (confirm(`هل أنت متأكد من حذف الرامي "${nameToDelete}"؟`)) {
-        shootersList = shootersList.filter(name => name !== nameToDelete);
-        saveShootersToLocalStorage();
-        renderShootersListInModal();
-        populateShooterDropdown();
-    }
-  }
-
-  function handleImportFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const content = e.target.result;
-        const names = content.split('\n')
-            .map(name => name.trim())
-            .filter(name => name.length > 0);
-        
-        const newNames = names.filter(name => !shootersList.includes(name));
-        if (newNames.length > 0) {
-            shootersList = [...shootersList, ...newNames];
-            shootersList.sort((a, b) => a.localeCompare(b, 'ar'));
-            saveShootersToLocalStorage();
-            renderShootersListInModal();
-            populateShooterDropdown();
-            alert(`تم استيراد ${newNames.length} اسم جديد بنجاح.`);
-        } else {
-            alert('لم يتم العثور على أسماء جديدة في الملف.');
-        }
-        shootersFileInput.value = '';
-    };
-    reader.readAsText(file);
-  }
-
-  // --- EVENT HANDLERS ---
-  function handleShooterSearch(e) {
-    shooterSearchQuery = e.target.value;
-    if (clearSearchButton) {
-      clearSearchButton.classList.toggle('hidden', !shooterSearchQuery.trim());
-    }
-    populateShooterDropdown();
-
-    const query = shooterSearchQuery.trim().toLowerCase();
-    if (query) {
-      const matches = shootersList.filter(name => name.toLowerCase().includes(query));
-      if (matches.length === 1) {
-        currentShooterName = matches[0];
-        shooterNameSelect.value = currentShooterName;
-        updateSaveButtonState();
-      } else if (!matches.includes(currentShooterName)) {
-        if (!currentEditId) {
-          currentShooterName = '';
-          shooterNameSelect.value = '';
-          updateSaveButtonState();
-        }
+    function selectStage(idx) {
+      currentStage = idx;
+      document.getElementById('active-stage-label').innerText = 'المرحلة ' + (idx + 1);
+      const btn = document.getElementById('btn-timer-toggle');
+      if (btn && !timerRunning) {
+        btn.innerText = '▶ بدء التوقيت (المرحلة ' + (idx + 1) + ')';
       }
     }
-  }
 
-  function handleClearSearch() {
-    shooterSearchQuery = '';
-    if (shooterSearchInput) shooterSearchInput.value = '';
-    if (clearSearchButton) clearSearchButton.classList.add('hidden');
-    populateShooterDropdown();
-    shooterNameSelect.value = currentShooterName;
-  }
-
-  function handleTimeInputChange(e) {
-    const index = parseInt(e.target.dataset.index, 10);
-    let value = e.target.value;
-    let digits = value.replace(/[^0-9]/g, '');
-
-    if (digits.length > 3) {
-      digits = digits.substring(0, 3);
-    }
-
-    let formattedValue = digits;
-    if (digits.length >= 2) {
-      formattedValue = digits.slice(0, 1) + '.' + digits.slice(1);
-    }
-
-    const newStages = [...currentStages];
-    newStages[index] = { ...newStages[index], time: formattedValue };
-    currentStages = newStages;
-    
-    renderEntryForm(index);
-  }
-
-  function handleHitButtonClick(e) {
-    const button = e.target.closest('.hit-button');
-    const index = parseInt(button.dataset.index, 10);
-    const hit = button.dataset.hit === 'true';
-    const newStages = [...currentStages];
-    newStages[index] = { ...newStages[index], hit: hit };
-    currentStages = newStages;
-    renderEntryForm();
-  }
-  
-  function handleNameChange(e) {
-    currentShooterName = e.target.value;
-    updateSaveButtonState();
-  }
-
-  function handleSave() {
-    if (!isFormValid()) return;
-    const totalScore = currentStages.reduce((sum, stage, index) => sum + calculateStageScore(index, stage.time, stage.hit), 0);
-    
-    if (currentEditId) {
-      const scoreIndex = allScores.findIndex(s => s.id === currentEditId);
-      if (scoreIndex !== -1) {
-        allScores[scoreIndex] = {
-          ...allScores[scoreIndex],
-          name: currentShooterName,
-          stages: currentStages,
-          totalScore: totalScore,
-          date: new Date().toISOString(),
-        };
+    function toggleTimer() {
+      if (timerRunning) {
+        stopTimer();
+      } else {
+        startTimer();
       }
-      alert('تم تحديث النتيجة بنجاح!');
-    } else {
-      const newScore = {
-        id: Date.now().toString(),
-        name: currentShooterName,
-        stages: currentStages,
-        totalScore: totalScore,
-        date: new Date().toISOString(),
-      };
-      allScores.push(newScore);
-      alert(`تم حفظ نتيجة ${currentShooterName}!`);
     }
 
-    saveScoresToLocalStorage();
-    if (currentEditId) {
-        window.location.hash = '#results';
-    } else {
-        resetEntryFormState();
-        renderEntryForm();
-    }
-  }
-  
-  function handleReset() {
-     if (currentEditId) {
-      window.location.hash = '#results';
-    } else {
-      resetEntryFormState();
-      renderEntryForm();
-    }
-  }
-  
-  function handleDeleteClick(e) {
-      const button = e.target.closest('.delete-button');
-      const id = button.dataset.id;
-      const name = button.dataset.name;
-      const confirmationMessage = `هل أنت متأكد من حذف نتيجة الرامي "${name}"؟\n\nلا يمكن التراجع عن هذا الإجراء.`;
-      if (window.confirm(confirmationMessage)) {
-          allScores = allScores.filter(score => score.id !== id);
-          saveScoresToLocalStorage();
-          renderResults();
+    function startTimer() {
+      playBuzzer();
+      timerRunning = true;
+      timerStartTime = performance.now();
+      const btn = document.getElementById('btn-timer-toggle');
+      if (btn) {
+        btn.className = 'btn btn-danger';
+        btn.innerText = '⏹️ إيقاف وتسجيل الوقت (المرحلة ' + (currentStage + 1) + ')';
       }
-  }
-  
-  function handleClearAll() {
-    if (window.confirm('هل أنت متأكد من رغبتك في حذف جميع النتائج المحفوظة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
-        allScores = [];
-        saveScoresToLocalStorage();
-        renderResults();
-    }
-  }
-
-  function handleSort(sortBy) {
-    currentSortBy = sortBy;
-    renderResults();
-  }
-  
-  function handleExportCSV() {
-    if (allScores.length === 0) {
-      alert('لا توجد نتائج لتصديرها.');
-      return;
+      timerInterval = setInterval(() => {
+        const elapsed = (performance.now() - timerStartTime) / 1000;
+        document.getElementById('timer-val').innerText = elapsed.toFixed(2);
+      }, 30);
     }
 
-    const sortedScores = [...allScores].sort((a, b) => {
-        if (currentSortBy === 'score') return b.totalScore - a.totalScore;
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    
-    const formatDate = (dateString) => new Date(dateString).toLocaleString('ar-EG', {
-        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
+    function stopTimer() {
+      if (!timerRunning) return;
+      timerRunning = false;
+      clearInterval(timerInterval);
+      const elapsed = ((performance.now() - timerStartTime) / 1000).toFixed(2);
+      document.getElementById('timer-val').innerText = elapsed;
+      const timeInput = document.getElementById('time-' + currentStage);
+      if (timeInput) {
+        timeInput.value = elapsed;
+        calculateTotal();
+      }
+      if (currentStage < 4) {
+        selectStage(currentStage + 1);
+      }
+      const btn = document.getElementById('btn-timer-toggle');
+      if (btn) {
+        btn.className = 'btn btn-success';
+        btn.innerText = '▶ بدء التوقيت (المرحلة ' + (currentStage + 1) + ')';
+      }
+    }
 
-    const headers = ['الرامي', 'التاريخ', 'نقاط م1', 'وقت م1', 'نقاط م2', 'وقت م2', 'نقاط م3', 'وقت م3', 'نقاط م4', 'وقت م4', 'نقاط م5', 'وقت م5', 'النتيجة الإجمالية'];
-    
-    const rows = sortedScores.map(score => {
-      const stageDetails = score.stages.flatMap((stage, index) => {
-        const stageScore = calculateStageScore(index, stage.time, stage.hit);
-        return [stageScore, stage.time];
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timer-val').innerText = '0.00';
+      const btn = document.getElementById('btn-timer-toggle');
+      if (btn) {
+        btn.className = 'btn btn-success';
+        btn.innerText = '▶ بدء التوقيت (المرحلة ' + (currentStage + 1) + ')';
+      }
+    }
+
+    function toggleHit(idx) {
+      hits[idx] = !hits[idx];
+      const btn = document.getElementById('hit-' + idx);
+      if (hits[idx]) {
+        btn.innerText = 'إصابة';
+        btn.className = 'hit-toggle hit';
+      } else {
+        btn.innerText = 'إخفاق';
+        btn.className = 'hit-toggle miss';
+      }
+      calculateTotal();
+    }
+
+    function calcScore(stageIdx, timeVal, hit) {
+      if (!hit || isNaN(timeVal) || timeVal <= 0) return 0;
+      const hundredths = Math.round(timeVal * 100);
+      if (stageIdx === 0 || stageIdx === 2 || stageIdx === 4) {
+        if (hundredths <= 304) return 10;
+        return Math.max(0, 10 - Math.ceil((hundredths - 304) / 5));
+      } else {
+        if (hundredths <= 509) return 10;
+        return Math.max(0, 10 - Math.ceil((hundredths - 509) / 10));
+      }
+    }
+
+    function calculateTotal() {
+      let total = 0;
+      for (let i = 0; i < 5; i++) {
+        const val = parseFloat(document.getElementById('time-' + i).value) || 0;
+        const s = calcScore(i, val, hits[i]);
+        document.getElementById('score-' + i).innerText = s;
+        total += s;
+      }
+      document.getElementById('total-score-val').innerText = total;
+    }
+
+    function resetForm() {
+      for (let i = 0; i < 5; i++) {
+        document.getElementById('time-' + i).value = '';
+        hits[i] = true;
+        const btn = document.getElementById('hit-' + i);
+        btn.innerText = 'إصابة';
+        btn.className = 'hit-toggle hit';
+        document.getElementById('score-' + i).innerText = '0';
+      }
+      document.getElementById('total-score-val').innerText = '0';
+      resetTimer();
+    }
+
+    // ====== Shooters Logic ======
+    function getShooters() {
+      try { return JSON.parse(dbGet('app_shooters')) || [
+        { name: 'فرج احمد', rank: 'عريف', number: '777', team: 'فريق الصقور' },
+        { name: 'رامي 1', rank: 'ملازم أول', number: '101', team: 'فريق أ' },
+        { name: 'رامي 2', rank: 'نقيب', number: '102', team: 'فريق أ' },
+        { name: 'رامي 3', rank: 'رائد', number: '103', team: 'فريق أ' },
+        { name: 'رامي 4', rank: 'مقدم', number: '201', team: 'فريق ب' },
+        { name: 'رامي 5', rank: 'عقيد', number: '202', team: 'فريق ب' },
+        { name: 'رامي 6', rank: 'ملازم', number: '203', team: 'فريق ب' },
+        { name: 'رامي 7', rank: 'رقيب أول', number: '301', team: 'فريق ج' },
+        { name: 'رامي 8', rank: 'رئيس رقباء', number: '302', team: 'فريق ج' },
+        { name: 'رامي 9', rank: 'وكيل رقيب', number: '303', team: 'فريق ج' },
+        { name: 'رامي 10', rank: 'عريف', number: '401', team: 'فريق د' },
+        { name: 'رامي 11', rank: 'جندي أول', number: '402', team: 'فريق د' },
+        { name: 'رامي 12', rank: 'جندي', number: '403', team: 'فريق د' }
+      ]; } catch(e) { return []; }
+    }
+
+    function saveShooters(list) { 
+      dbSet('app_shooters', JSON.stringify(list)); 
+      renderShootersDropdown(); 
+    }
+
+    function focusAddShooter() {
+      document.getElementById('new-shooter-name').focus();
+      document.getElementById('add-shooter-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function addShooter() {
+      const name = document.getElementById('new-shooter-name').value.trim();
+      const rank = document.getElementById('new-shooter-rank').value.trim();
+      const number = document.getElementById('new-shooter-number').value.trim();
+      const team = document.getElementById('new-shooter-team').value.trim();
+      if (!name) return alert('يرجى كتابة اسم الرامي');
+      const list = getShooters();
+      list.push({
+        name,
+        rank: rank || '-',
+        number: number || '-',
+        team: team || '-'
       });
-      return [`"${score.name.replace(/"/g, '""')}"`, `"${formatDate(score.date)}"`, ...stageDetails, score.totalScore].join(',');
-    });
-
-    const csvContent = [headers.join(','), ...rows].join('\n');
-    const bom = '\uFEFF';
-    const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `timing-shooting-results-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }
-
-
-  // --- HELPERS & STATE LOGIC ---
-  const isFormValid = () => currentShooterName.trim() !== '' && currentStages.every(stage => stage.time.trim() !== '' && !isNaN(parseFloat(stage.time)));
-  
-  function updateSaveButtonState() {
-    saveButton.disabled = !isFormValid();
-  }
-  
-  function populateShooterDropdown() {
-    shooterNameSelect.innerHTML = '<option value="">-- اختر رامياً --</option>';
-    let options = [...shootersList];
-    
-    // If editing a score for a shooter who was deleted, add them back temporarily
-    if (currentEditId && currentShooterName && !options.includes(currentShooterName)) {
-        options.push(currentShooterName);
-        options.sort((a, b) => a.localeCompare(b, 'ar'));
+      saveShooters(list);
+      document.getElementById('new-shooter-name').value = '';
+      document.getElementById('new-shooter-rank').value = '';
+      document.getElementById('new-shooter-number').value = '';
+      document.getElementById('new-shooter-team').value = '';
+      renderShooters();
+      alert('تم إضافة الرامي بنجاح!');
     }
 
-    const query = shooterSearchQuery.trim().toLowerCase();
-    if (query) {
-        options = options.filter(name => name.toLowerCase().includes(query));
-        if (currentShooterName && !options.includes(currentShooterName) && currentEditId) {
-            options.unshift(currentShooterName);
-        }
+    function renderShootersDropdown() {
+      const list = getShooters();
+      const sel = document.getElementById('shooter-select');
+      sel.innerHTML = '<option value="">-- اختر رامي من القائمة --</option>';
+      list.forEach((s, idx) => {
+        sel.innerHTML += '<option value="' + idx + '">' + s.name + (s.rank ? ' (' + s.rank + ')' : '') + '</option>';
+      });
     }
 
-    if (query && options.length === 0) {
-        const noMatch = document.createElement('option');
-        noMatch.value = '';
-        noMatch.disabled = true;
-        noMatch.textContent = `لا توجد نتائج تطابق "${shooterSearchQuery.trim()}"`;
-        shooterNameSelect.appendChild(noMatch);
-    } else {
-        options.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            shooterNameSelect.appendChild(option);
-        });
+    function onSelectShooter() {
+      const idx = document.getElementById('shooter-select').value;
+      if (idx !== '') {
+        const s = getShooters()[idx];
+        document.getElementById('manual-name').value = s.name;
+      }
     }
 
-    shooterNameSelect.value = currentShooterName;
-  }
-
-  function loadFromLocalStorage() {
-    try {
-      const scoresItem = window.localStorage.getItem(SCORES_STORAGE_KEY);
-      allScores = scoresItem ? JSON.parse(scoresItem) : [];
-      const shootersItem = window.localStorage.getItem(SHOOTERS_STORAGE_KEY);
-      shootersList = shootersItem ? JSON.parse(shootersItem) : [];
-    } catch (error) {
-      console.error(error);
-      allScores = [];
-      shootersList = [];
+    function selectShooterForScoring(idx) {
+      const list = getShooters();
+      if (list[idx]) {
+        document.getElementById('manual-name').value = list[idx].name;
+        document.getElementById('shooter-select').value = idx;
+        showTab('scoring');
+      }
     }
-  }
 
-  function saveScoresToLocalStorage() {
-    try {
-      window.localStorage.setItem(SCORES_STORAGE_KEY, JSON.stringify(allScores));
-    } catch (error) {
-      console.error(error);
+    function updateShooterStats(filteredCount) {
+      const list = getShooters();
+      const results = getResultsDetailed();
+      
+      document.getElementById('stat-total-shooters').innerText = list.length;
+      
+      const teams = [...new Set(list.map(s => s.team).filter(t => t && t !== '-'))];
+      document.getElementById('stat-teams-count').innerText = teams.length;
+      
+      document.getElementById('stat-filtered-shooters').innerText = filteredCount !== undefined ? filteredCount : list.length;
+      
+      document.getElementById('stat-scored-shooters').innerText = results.length;
     }
-  }
 
-  function saveShootersToLocalStorage() {
-    try {
-        window.localStorage.setItem(SHOOTERS_STORAGE_KEY, JSON.stringify(shootersList));
-    } catch (error) {
-        console.error("Failed to save shooters list:", error);
+    function renderTeamFilterButtons() {
+      const list = getShooters();
+      const teams = [...new Set(list.map(s => s.team).filter(t => t && t !== '-'))];
+      const container = document.getElementById('team-filter-buttons');
+      if (!container) return;
+      
+      const allActive = activeTeamFilter === '';
+      
+      container.innerHTML = `
+        <button class="btn ${allActive ? 'btn-primary' : 'btn-outline'}" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;" onclick="setTeamFilter('')">
+          الكل (${list.length})
+        </button>
+      `;
+      
+      teams.forEach(team => {
+        const count = list.filter(s => s.team === team).length;
+        const isActive = activeTeamFilter === team;
+        container.innerHTML += `
+          <button class="btn ${isActive ? 'btn-primary' : 'btn-outline'}" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;" onclick="setTeamFilter('${team}')">
+            ${team} (${count})
+          </button>
+        `;
+      });
     }
-  }
-  
-  function resetEntryFormState() {
-      currentEditId = null;
-      currentShooterName = '';
-      shooterSearchQuery = '';
-      if (shooterSearchInput) shooterSearchInput.value = '';
-      if (clearSearchButton) clearSearchButton.classList.add('hidden');
-      currentStages = Array(5).fill({ time: '', hit: true });
-  }
 
-  // --- NAVIGATION & INITIALIZATION ---
-  function navigate() {
-    const hash = window.location.hash || '#entry';
-    document.getElementById('page-entry').style.display = 'none';
-    document.getElementById('page-results').style.display = 'none';
+    function setTeamFilter(team) {
+      activeTeamFilter = team;
+      renderShooters();
+    }
 
-    if (hash.startsWith('#edit/')) {
-      const scoreId = hash.split('/')[1];
-      const scoreToEdit = allScores.find(s => s.id === scoreId);
-      if (scoreToEdit) {
-        currentEditId = scoreId;
-        currentShooterName = scoreToEdit.name;
-        shooterSearchQuery = '';
-        if (shooterSearchInput) shooterSearchInput.value = '';
-        if (clearSearchButton) clearSearchButton.classList.add('hidden');
-        currentStages = scoreToEdit.stages;
-        entryTitle.textContent = 'تعديل النتيجة';
-        saveButton.textContent = 'حفظ التعديلات';
-        resetButton.textContent = 'إلغاء';
-      } else {
-        alert('النتيجة غير موجودة. ستتم إعادة توجيهك.');
-        window.location.hash = '#entry';
+    function renderShooters() {
+      const list = getShooters();
+      const container = document.getElementById('shooters-list-ui');
+      const search = (document.getElementById('shooter-search-input')?.value || '').toLowerCase().trim();
+
+      const filtered = list.map((s, idx) => ({ ...s, originalIdx: idx })).filter(s => {
+        const matchSearch = !search ||
+          (s.name||'').toLowerCase().includes(search) ||
+          (s.rank||'').toLowerCase().includes(search) ||
+          (s.number||'').toLowerCase().includes(search) ||
+          (s.team||'').toLowerCase().includes(search);
+        const matchTeam = !activeTeamFilter || s.team === activeTeamFilter;
+        return matchSearch && matchTeam;
+      });
+
+      updateShooterStats(filtered.length);
+      renderTeamFilterButtons();
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted)">لا يوجد رماة مطابقين للبحث.</td></tr>';
         return;
       }
-      renderEntryForm();
-      document.getElementById('page-entry').style.display = 'block';
-    } else if (hash === '#results') {
-      renderResults();
-      document.getElementById('page-results').style.display = 'block';
-    } else {
-      if (currentEditId) resetEntryFormState();
-      entryTitle.textContent = 'تسجيل نتائج الرماية';
-      saveButton.textContent = 'حفظ النتيجة';
-      resetButton.textContent = 'مسح';
-      renderEntryForm();
-      document.getElementById('page-entry').style.display = 'block';
+
+      const results = getResultsDetailed();
+
+      container.innerHTML = filtered.map((s, i) => {
+        const shooterResults = results.filter(r => r.name === s.name);
+        const scoresCount = shooterResults.length;
+        const bestScore = scoresCount > 0 ? Math.max(...shooterResults.map(r => r.total)) : 0;
+
+        return `
+          <tr>
+            <td style="color:var(--text-muted)">${i + 1}</td>
+            <td><strong>${s.name}</strong></td>
+            <td><span class="tag-rank">${s.rank || '-'}</span></td>
+            <td><span class="tag-number">${s.number || '-'}</span></td>
+            <td><span class="tag-team">${s.team || '-'}</span></td>
+            <td style="text-align:center;">
+              <div style="font-weight:700; color:var(--accent);">${scoresCount} رماية</div>
+              ${scoresCount > 0 ? `<div style="font-size:0.7rem; color:var(--text-muted);">أفضل نتيجة: ${bestScore}</div>` : ''}
+            </td>
+            <td style="text-align:center;">
+              <div style="display:flex; gap:6px; justify-content:center;">
+                <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem" onclick="selectShooterForScoring(${s.originalIdx})">🎯 تسجيل</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem" onclick="editShooter(${s.originalIdx})" title="تعديل">✏️</button>
+                <button class="btn btn-outline" style="color:var(--danger); border-color:rgba(239,68,68,0.3); padding:4px 8px; font-size:0.75rem" onclick="deleteShooter(${s.originalIdx})" title="حذف">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
-    updateActiveNav(hash);
-  }
 
-  function updateActiveNav(hash) {
-      const activeClass = ['bg-sky-600', 'text-white'];
-      const defaultClass = ['bg-slate-700', 'hover:bg-slate-600'];
-      const navEntry = document.getElementById('nav-entry');
-      const navResults = document.getElementById('nav-results');
+    function editShooter(idx) {
+      const list = getShooters();
+      const s = list[idx];
+      if (!s) return;
 
-      navEntry.classList.remove(...activeClass, ...defaultClass);
-      navResults.classList.remove(...activeClass, ...defaultClass);
+      document.getElementById('new-shooter-name').value = s.name || '';
+      document.getElementById('new-shooter-rank').value = s.rank || '';
+      document.getElementById('new-shooter-number').value = s.number || '';
+      document.getElementById('new-shooter-team').value = s.team || '';
 
-      if (hash.startsWith('#results')) {
-          navResults.classList.add(...activeClass);
-          navEntry.classList.add(...defaultClass);
-      } else {
-          navEntry.classList.add(...activeClass);
-          navResults.classList.add(...defaultClass);
+      editingShooterIdx = idx;
+      const addBtn = document.getElementById('add-shooter-btn');
+      if (addBtn) {
+        addBtn.innerHTML = '💾 حفظ التعديل';
+        addBtn.onclick = saveEditShooter;
       }
-  }
-  
-  function init() {
-    loadFromLocalStorage();
-    navigate();
-    
-    // Attach permanent event listeners
-    window.addEventListener('hashchange', navigate);
-    shooterNameSelect.addEventListener('change', handleNameChange);
-    if (shooterSearchInput) {
-      shooterSearchInput.addEventListener('input', handleShooterSearch);
-      shooterSearchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const query = shooterSearchQuery.trim().toLowerCase();
-          const matches = shootersList.filter(name => name.toLowerCase().includes(query));
-          if (matches.length > 0) {
-            currentShooterName = matches[0];
-            shooterNameSelect.value = currentShooterName;
-            updateSaveButtonState();
-            shooterSearchInput.blur();
+
+      document.getElementById('new-shooter-name').focus();
+      document.getElementById('add-shooter-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function saveEditShooter() {
+      if (editingShooterIdx === null) return;
+      
+      const name = document.getElementById('new-shooter-name').value.trim();
+      const rank = document.getElementById('new-shooter-rank').value.trim();
+      const number = document.getElementById('new-shooter-number').value.trim();
+      const team = document.getElementById('new-shooter-team').value.trim();
+      
+      if (!name) return alert('يرجى كتابة اسم الرامي');
+      
+      const list = getShooters();
+      list[editingShooterIdx] = {
+        name,
+        rank: rank || '-',
+        number: number || '-',
+        team: team || '-'
+      };
+      saveShooters(list);
+      
+      document.getElementById('new-shooter-name').value = '';
+      document.getElementById('new-shooter-rank').value = '';
+      document.getElementById('new-shooter-number').value = '';
+      document.getElementById('new-shooter-team').value = '';
+      
+      editingShooterIdx = null;
+      const addBtn = document.getElementById('add-shooter-btn');
+      if (addBtn) {
+        addBtn.innerHTML = '+ إضافة الرامي إلى القائمة';
+        addBtn.onclick = addShooter;
+      }
+      
+      renderShooters();
+      alert('تم حفظ التعديل بنجاح!');
+    }
+
+    function deleteShooter(idx) {
+      const list = getShooters();
+      if (confirm('هل أنت متأكد من حذف هذا الرامي؟')) {
+        list.splice(idx, 1);
+        saveShooters(list);
+        renderShooters();
+      }
+    }
+
+    // ====== Import with encoding fix ======
+    function importShootersExcel() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv,.txt';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        pendingImportFile = file;
+        // فتح نافذة اختيار الترميز
+        document.getElementById('encoding-modal').classList.add('active');
+      };
+      input.click();
+    }
+
+    function closeEncodingModal() {
+      document.getElementById('encoding-modal').classList.remove('active');
+      pendingImportFile = null;
+    }
+
+    function confirmImport() {
+      if (!pendingImportFile) return;
+      
+      const encoding = document.getElementById('encoding-select').value;
+      const file = pendingImportFile;
+      
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          let text = evt.target.result;
+          
+          // إذا كان الترميز UTF-8، نحاول اكتشاف BOM وإزالته
+          if (encoding === 'UTF-8') {
+            text = text.replace(/^\uFEFF/, '');
+          }
+          
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (lines.length < 2) {
+            alert('الملف فارغ أو غير صالح');
+            closeEncodingModal();
+            return;
+          }
+          
+          // كشف الفاصل (فاصلة أو فاصلة منقوطة أو Tab)
+          const firstLine = lines[0];
+          let separator = ',';
+          if (firstLine.includes(';') && !firstLine.includes(',')) separator = ';';
+          else if (firstLine.includes('\t')) separator = '\t';
+          
+          const list = getShooters();
+          let added = 0;
+          
+          for (let i = 1; i < lines.length; i++) {
+            const parts = lines[i].split(separator).map(p => p.replace(/^"|"$/g, '').trim());
+            if (parts.length >= 1 && parts[0]) {
+              list.push({
+                name: parts[0] || '-',
+                rank: parts[1] || '-',
+                number: parts[2] || '-',
+                team: parts[3] || '-'
+              });
+              added++;
+            }
+          }
+          
+          saveShooters(list);
+          renderShooters();
+          closeEncodingModal();
+          alert(`تم استيراد ${added} رامي بنجاح!`);
+        } catch(err) {
+          alert('حدث خطأ أثناء قراءة الملف: ' + err.message);
+          closeEncodingModal();
+        }
+      };
+      
+      // قراءة الملف بالترميز المحدد
+      reader.readAsText(file, encoding);
+    }
+
+    function exportShootersExcel() {
+      const list = getShooters();
+      if (list.length === 0) {
+        alert('لا توجد بيانات للتصدير');
+        return;
+      }
+      
+      let csv = '\uFEFF';
+      csv += 'الاسم الكامل,الرتبة,الرقم التعريفي,الفريق\n';
+      
+      list.forEach(s => {
+        csv += `"${s.name || ''}","${s.rank || ''}","${s.number || ''}","${s.team || ''}"\n`;
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'shooters_list_' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // ====== Results Logic ======
+    function getResultsDetailed() {
+      try {
+        const raw = JSON.parse(dbGet('app_results')) || [];
+        return raw.map(r => {
+          if (!r.stages) {
+            return {
+              ...r,
+              stages: [
+                { time: 0, hit: true, score: 0 },
+                { time: 0, hit: true, score: 0 },
+                { time: 0, hit: true, score: 0 },
+                { time: 0, hit: true, score: 0 },
+                { time: 0, hit: true, score: 0 }
+              ],
+              rank: r.rank || '-',
+              number: r.number || '-',
+              team: r.team || '-'
+            };
+          }
+          return r;
+        });
+      } catch(e) { return []; }
+    }
+
+    function saveResultsDetailed(list) {
+      dbSet('app_results', JSON.stringify(list));
+    }
+
+    function saveCurrentScore() {
+      const name = document.getElementById('manual-name').value.trim() || 'رامي بدون اسم';
+      const total = parseInt(document.getElementById('total-score-val').innerText) || 0;
+
+      const stages = [];
+      for (let i = 0; i < 5; i++) {
+        const timeVal = parseFloat(document.getElementById('time-' + i).value) || 0;
+        const hit = hits[i];
+        const score = calcScore(i, timeVal, hit);
+        stages.push({ time: timeVal, hit: hit, score: score });
+      }
+
+      let rank = '-', number = '-', team = '-';
+      const shooters = getShooters();
+      const found = shooters.find(s => s.name === name);
+      if (found) {
+        rank = found.rank || '-';
+        number = found.number || '-';
+        team = found.team || '-';
+      }
+
+      const results = getResultsDetailed();
+      results.unshift({
+        name,
+        rank,
+        number,
+        team,
+        total,
+        stages,
+        date: new Date().toLocaleString('ar-SA')
+      });
+      saveResultsDetailed(results);
+      alert('تم حفظ نتيجة الرامي بنجاح!');
+      resetForm();
+      renderResults();
+    }
+
+    function renderResults() {
+      const allResults = getResultsDetailed();
+      const container = document.getElementById('results-table-body');
+      const search = (document.getElementById('results-search-input')?.value || '').toLowerCase().trim();
+      const teamFilter = document.getElementById('results-filter-team')?.value || '';
+      const sortOrder = document.getElementById('results-sort-order')?.value || 'newest';
+
+      const teamSelect = document.getElementById('results-filter-team');
+      if (teamSelect) {
+        const teams = [...new Set(allResults.map(r => r.team).filter(t => t && t !== '-'))];
+        const currentVal = teamSelect.value;
+        teamSelect.innerHTML = '<option value="">جميع الفرق</option>' +
+          teams.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
+      }
+
+      let filtered = allResults.filter(r => {
+        const matchSearch = !search ||
+          (r.name || '').toLowerCase().includes(search) ||
+          (r.number || '').toLowerCase().includes(search) ||
+          (r.team || '').toLowerCase().includes(search) ||
+          (r.rank || '').toLowerCase().includes(search);
+        const matchTeam = !teamFilter || r.team === teamFilter;
+        return matchSearch && matchTeam;
+      });
+
+      if (sortOrder === 'highest') {
+        filtered.sort((a, b) => b.total - a.total);
+      } else if (sortOrder === 'lowest') {
+        filtered.sort((a, b) => a.total - b.total);
+      }
+
+      document.getElementById('results-count').innerText = filtered.length;
+      document.getElementById('results-total').innerText = allResults.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted)">لا توجد نتائج مطابقة.</td></tr>';
+        return;
+      }
+
+      container.innerHTML = filtered.map((r, idx) => {
+        const stageCells = r.stages.map((s, i) => {
+          const scoreColor = s.score >= 8 ? 'var(--success)' : s.score >= 5 ? 'var(--warning)' : 'var(--danger)';
+          const hitIcon = s.hit ? '✅' : '❌';
+          const timeDisplay = s.time > 0 ? s.time.toFixed(2) + 'ث' : '-';
+          return `<td style="text-align:center;">
+            <div style="font-weight:900; color:${scoreColor}; font-size:1.1rem;">${s.score}</div>
+            <div style="font-size:0.7rem; color:var(--text-muted);">${timeDisplay}</div>
+            <div style="font-size:0.65rem;">${hitIcon}</div>
+          </td>`;
+        }).join('');
+
+        const shooterInfo = `
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <strong style="font-size:0.95rem;">${r.name}</strong>
+              ${r.rank && r.rank !== '-' ? `<span class="tag-rank" style="font-size:0.65rem;">${r.rank}</span>` : ''}
+            </div>
+            <div style="display:flex; gap:6px; font-size:0.7rem; color:var(--text-muted);">
+              ${r.number && r.number !== '-' ? `<span class="tag-number">${r.number}</span>` : ''}
+              ${r.team && r.team !== '-' ? `<span class="tag-team">${r.team}</span>` : ''}
+            </div>
+          </div>
+        `;
+
+        return `<tr>
+          <td style="color:var(--text-muted);">${idx + 1}</td>
+          <td>${shooterInfo}</td>
+          <td style="font-size:0.78rem; color:var(--text-muted);">${r.date || '-'}</td>
+          ${stageCells}
+          <td style="text-align:center;">
+            <span style="font-size:1.2rem; font-weight:900; color:var(--accent);">${r.total}</span>
+          </td>
+          <td style="text-align:center;">
+            <div style="display:flex; gap:4px; justify-content:center;">
+              <button class="btn btn-outline" style="padding:4px 6px; font-size:0.7rem;" onclick="editResult(${allResults.indexOf(r)})" title="تعديل">✏️</button>
+              <button class="btn btn-outline" style="padding:4px 6px; font-size:0.7rem; color:var(--danger); border-color:rgba(239,68,68,0.3);" onclick="deleteResult(${allResults.indexOf(r)})" title="حذف">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function deleteResult(idx) {
+      if (!confirm('هل أنت متأكد من حذف هذه النتيجة؟')) return;
+      const list = getResultsDetailed();
+      list.splice(idx, 1);
+      saveResultsDetailed(list);
+      renderResults();
+    }
+
+    function editResult(idx) {
+      const list = getResultsDetailed();
+      const r = list[idx];
+      if (!r) return;
+
+      document.getElementById('manual-name').value = r.name || '';
+
+      if (r.stages) {
+        for (let i = 0; i < 5; i++) {
+          const s = r.stages[i];
+          if (s) {
+            document.getElementById('time-' + i).value = s.time > 0 ? s.time : '';
+            hits[i] = s.hit;
+            const btn = document.getElementById('hit-' + i);
+            if (s.hit) {
+              btn.innerText = 'إصابة';
+              btn.className = 'hit-toggle hit';
+            } else {
+              btn.innerText = 'إخفاق';
+              btn.className = 'hit-toggle miss';
+            }
           }
         }
+        calculateTotal();
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('tab-scoring').style.display = 'block';
+      document.getElementById('tab-shooters').style.display = 'none';
+      document.getElementById('tab-results').style.display = 'none';
+
+      if (confirm('سيتم حذف النتيجة القديمة بعد الحفظ. هل تريد المتابعة؟')) {
+        list.splice(idx, 1);
+        saveResultsDetailed(list);
+      }
+    }
+
+    function exportResultsExcel() {
+      const results = getResultsDetailed();
+      if (results.length === 0) {
+        alert('لا توجد بيانات للتصدير');
+        return;
+      }
+
+      let csv = '\uFEFF';
+      csv += 'الاسم,الرتبة,الرقم,الفريق,';
+      csv += 'المرحلة 1 (ث),المرحلة 1 (نقاط),المرحلة 2 (ث),المرحلة 2 (نقاط),';
+      csv += 'المرحلة 3 (ث),المرحلة 3 (نقاط),المرحلة 4 (ث),المرحلة 4 (نقاط),';
+      csv += 'المرحلة 5 (ث),المرحلة 5 (نقاط),الإجمالي,التاريخ\n';
+
+      results.forEach(r => {
+        csv += `"${r.name}","${r.rank || '-'}","${r.number || '-'}","${r.team || '-'}",`;
+        (r.stages || []).forEach(s => {
+          csv += `${s.time > 0 ? s.time.toFixed(2) : '-'},${s.score},`;
+        });
+        csv += `${r.total},"${r.date || '-'}"\n`;
       });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'shooting_results_' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
-    if (clearSearchButton) {
-      clearSearchButton.addEventListener('click', handleClearSearch);
+
+    function exportResultsCSV() {
+      const results = getResultsDetailed();
+      if (results.length === 0) {
+        alert('لا توجد بيانات للتصدير');
+        return;
+      }
+
+      let csv = '\uFEFF';
+      csv += 'الاسم,الرتبة,الرقم,الفريق,';
+      csv += 'المرحلة 1 (ث),المرحلة 1 (نقاط),المرحلة 2 (ث),المرحلة 2 (نقاط),';
+      csv += 'المرحلة 3 (ث),المرحلة 3 (نقاط),المرحلة 4 (ث),المرحلة 4 (نقاط),';
+      csv += 'المرحلة 5 (ث),المرحلة 5 (نقاط),الإجمالي,التاريخ\n';
+
+      results.forEach(r => {
+        csv += `"${r.name}","${r.rank || '-'}","${r.number || '-'}","${r.team || '-'}",`;
+        (r.stages || []).forEach(s => {
+          csv += `${s.time > 0 ? s.time.toFixed(2) : '-'},${s.score},`;
+        });
+        csv += `${r.total},"${r.date || '-'}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'shooting_results_' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
-    saveButton.addEventListener('click', handleSave);
-    resetButton.addEventListener('click', handleReset);
-    document.getElementById('export-csv-button').addEventListener('click', handleExportCSV);
-    document.getElementById('clear-all-button').addEventListener('click', handleClearAll);
-    
-    stagesContainer.addEventListener('input', (e) => {
-        if (e.target.classList.contains('stage-time-input')) {
-            handleTimeInputChange(e);
-        }
-    });
-     stagesContainer.addEventListener('click', (e) => {
-        if (e.target.closest('.hit-button')) {
-            handleHitButtonClick(e);
-        }
-    });
 
-    // Shooters Modal Listeners
-    document.getElementById('manage-shooters-button').addEventListener('click', () => {
-        renderShootersListInModal();
-        shootersModal.style.display = 'flex';
-    });
-    document.getElementById('close-modal-button').addEventListener('click', () => {
-        shootersModal.style.display = 'none';
-    });
-    document.getElementById('add-shooter-button').addEventListener('click', handleAddShooter);
-    newShooterNameInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleAddShooter();
-    });
-    document.getElementById('import-shooters-button').addEventListener('click', () => {
-        shootersFileInput.click();
-    });
-    shootersFileInput.addEventListener('change', handleImportFile);
+    function clearAllScores() {
+      if (confirm('هل أنت متأكد من مسح جميع النتائج؟')) {
+        saveResultsDetailed([]);
+        renderResults();
+      }
+    }
 
-  }
+    // Init
+    renderShootersDropdown();
+    const dateNode = document.getElementById('today-date');
+    if (dateNode) dateNode.textContent = new Intl.DateTimeFormat('ar-SA', { dateStyle: 'medium' }).format(new Date());
 
-  // Start the application
-  init();
-</script>
+    // Keyboard spacebar shortcut for toggle timer
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        e.preventDefault();
+        toggleTimer();
+      }
+    });
+  </script>
 </body>
 </html>
