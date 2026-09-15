@@ -160,7 +160,11 @@
       .nav-tabs { margin-inline: -2px; }
       .tab-btn { min-height: 42px; padding: 8px 11px; font-size: .78rem; }
       .btn { min-height: 44px; }
-      .timer-display { font-size: 3.45rem; min-height: 112px; display: flex; align-items: center; justify-content: center; }
+      #tab-scoring > .grid-layout > div:first-child > .card:first-child { padding: 12px; }
+      #tab-scoring > .grid-layout > div:first-child > .card:first-child .card-title { margin-bottom: 7px; }
+      .timer-display { font-size: 2.65rem; min-height: 78px; padding: 8px; margin: 6px 0 9px; display: flex; align-items: center; justify-content: center; }
+      #btn-timer-toggle { min-height: 40px !important; padding: 9px !important; font-size: .9rem !important; }
+      #tab-scoring > .grid-layout > div:first-child > .card:first-child > .btn-outline { min-height: 36px; padding: 7px; font-size: .78rem; }
       .stage-row { grid-template-columns: minmax(0, 1fr) 64px 58px 28px; gap: 4px; padding: 11px 0; }
       .stage-info { min-width: 0; }
       .stage-info strong { font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -174,6 +178,68 @@
       #manual-name { font-size: .88rem; }
       #shooter-search-hint { line-height: 1.5; }
       .modal-box { max-height: calc(100dvh - 32px); overflow-y: auto; }
+
+      /* Mobile layout for all three pages */
+      #tab-scoring, #tab-shooters, #tab-results { width: 100%; min-width: 0; }
+      #tab-shooters > .card:first-child > div,
+      #tab-results > .card:first-child > div { flex-direction: column; align-items: stretch !important; gap: 12px !important; }
+      #tab-shooters > .card:first-child > div > div:last-child,
+      #tab-results > .card:first-child > div > div:last-child { display: grid !important; grid-template-columns: 1fr; gap: 8px !important; }
+      #tab-shooters > .card:first-child button,
+      #tab-results > .card:first-child button { width: 100%; }
+      #tab-shooters .card[style*="grid-template-columns"],
+      #tab-results .card[style*="grid-template-columns"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      #tab-shooters .shooters-table,
+      #tab-results .shooters-table { min-width: 0 !important; width: 100% !important; font-size: .76rem; }
+      #tab-shooters .shooters-table thead,
+      #tab-results .shooters-table thead { display: none; }
+      #tab-shooters .shooters-table tbody,
+      #tab-results .shooters-table tbody,
+      #tab-shooters .shooters-table tr,
+      #tab-results .shooters-table tr { display: block; width: 100%; }
+      #tab-shooters .shooters-table tr,
+      #tab-results .shooters-table tr { background: rgba(4,12,24,.34); border: 1px solid var(--card-border); border-radius: 12px; margin: 10px; width: calc(100% - 20px); padding: 5px 10px; }
+      #tab-shooters .shooters-table td,
+      #tab-results .shooters-table td { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 2px; border-bottom: 1px solid rgba(148,163,184,.1); text-align: start !important; min-height: 34px; }
+      #tab-shooters .shooters-table td:last-child,
+      #tab-results .shooters-table td:last-child { border-bottom: 0; }
+      #tab-shooters .shooters-table td::before,
+      #tab-results .shooters-table td::before { color: var(--text-muted); font-size: .7rem; font-weight: 700; flex: 0 0 auto; }
+      #tab-shooters .shooters-table td:nth-child(1)::before { content: '#'; }
+      #tab-shooters .shooters-table td:nth-child(2)::before { content: 'الاسم'; }
+      #tab-shooters .shooters-table td:nth-child(3)::before { content: 'الرتبة'; }
+      #tab-shooters .shooters-table td:nth-child(4)::before { content: 'الرقم'; }
+      #tab-shooters .shooters-table td:nth-child(5)::before { content: 'الفريق'; }
+      #tab-shooters .shooters-table td:nth-child(6)::before { content: 'الإحصائيات'; }
+      #tab-shooters .shooters-table td:nth-child(7)::before { content: 'إجراءات'; }
+      #tab-results .shooters-table td:nth-child(1)::before { content: '#'; }
+      #tab-results .shooters-table td:nth-child(2)::before { content: 'الرامي'; }
+      #tab-results .shooters-table td:nth-child(3)::before { content: 'التاريخ'; }
+      #tab-results .shooters-table td:nth-child(4)::before { content: 'المرحلة 1'; }
+      #tab-results .shooters-table td:nth-child(5)::before { content: 'المرحلة 2'; }
+      #tab-results .shooters-table td:nth-child(6)::before { content: 'المرحلة 3'; }
+      #tab-results .shooters-table td:nth-child(7)::before { content: 'المرحلة 4'; }
+      #tab-results .shooters-table td:nth-child(8)::before { content: 'المرحلة 5'; }
+      #tab-results .shooters-table td:nth-child(9)::before { content: 'الإجمالي'; }
+      #tab-results .shooters-table td:nth-child(10)::before { content: 'إجراءات'; }
+      #tab-shooters .shooters-table td > div,
+      #tab-results .shooters-table td > div { max-width: 75%; }
+      #tab-results .shooters-table td:nth-child(4),
+      #tab-results .shooters-table td:nth-child(5),
+      #tab-results .shooters-table td:nth-child(6),
+      #tab-results .shooters-table td:nth-child(7),
+      #tab-results .shooters-table td:nth-child(8) { padding-block: 6px; }
+      #tab-results .shooters-table td:nth-child(4)::after,
+      #tab-results .shooters-table td:nth-child(5)::after,
+      #tab-results .shooters-table td:nth-child(6)::after,
+      #tab-results .shooters-table td:nth-child(7)::after,
+      #tab-results .shooters-table td:nth-child(8)::after { content: ''; }
+      #tab-shooters .card[style*="overflow: hidden"],
+      #tab-results .card[style*="overflow: hidden"] { overflow: visible !important; }
+      #tab-shooters .card > div[style*="overflow-x"],
+      #tab-results .card > div[style*="overflow-x"] { overflow: visible !important; }
+      #tab-shooters .card-title, #tab-results .card-title { flex-wrap: wrap; }
+      #manual-name { margin-bottom: 5px; }
     }
     @media (max-width: 380px) {
       .stage-row { grid-template-columns: minmax(0, 1fr) 58px 52px 24px; }
@@ -229,11 +295,11 @@
 
           <div class="card">
           <div class="card-title"><span>اختيار الرامي</span><span class="badge">بحث سريع</span></div>
-          <select id="shooter-select" class="input-field" onchange="onSelectShooter()">
+            <select id="shooter-select" class="input-field" onchange="onSelectShooter()" aria-hidden="true" tabindex="-1" style="display:none">
               <option value="">-- اختر رامي من القائمة --</option>
             </select>
             <div style="position:relative;">
-              <input type="search" id="manual-name" class="input-field" list="shooters-datalist" autocomplete="off" placeholder="ابحث باسم الرامي..." oninput="searchShooterName(this.value)" style="padding-inline-end:42px;">
+              <input type="search" id="manual-name" class="input-field" list="shooters-datalist" autocomplete="off" placeholder="ابحث واختر اسم الرامي..." oninput="searchShooterName(this.value)" style="padding-inline-end:42px;">
               <span aria-hidden="true" style="position:absolute;inset-inline-end:14px;top:10px;color:var(--accent);font-size:1.05rem;pointer-events:none;">⌕</span>
             </div>
             <datalist id="shooters-datalist"></datalist>
