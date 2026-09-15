@@ -192,11 +192,16 @@
           </div>
 
           <div class="card">
-            <div class="card-title">اختيار الرامي</div>
-            <select id="shooter-select" class="input-field" onchange="onSelectShooter()">
+          <div class="card-title"><span>اختيار الرامي</span><span class="badge">بحث سريع</span></div>
+          <select id="shooter-select" class="input-field" onchange="onSelectShooter()">
               <option value="">-- اختر رامي من القائمة --</option>
             </select>
-            <input type="text" id="manual-name" class="input-field" placeholder="أو اكتب اسم الرامي هنا مباشرة">
+            <div style="position:relative;">
+              <input type="search" id="manual-name" class="input-field" list="shooters-datalist" autocomplete="off" placeholder="ابحث باسم الرامي..." oninput="searchShooterName(this.value)" style="padding-inline-end:42px;">
+              <span aria-hidden="true" style="position:absolute;inset-inline-end:14px;top:10px;color:var(--accent);font-size:1.05rem;pointer-events:none;">⌕</span>
+            </div>
+            <datalist id="shooters-datalist"></datalist>
+            <div id="shooter-search-hint" style="font-size:.75rem;color:var(--text-muted);margin-top:-3px;">اكتب جزءًا من الاسم ثم اختر الرامي من الاقتراحات</div>
           </div>
         </div>
 
@@ -289,7 +294,7 @@
               <span>👤</span> إضافة رامي جديد
             </button>
             <button class="btn btn-success" style="padding: 10px 20px; font-size: 0.9rem;" onclick="importShootersExcel()">
-              <span>📥</span> استيراد ملف إكسل
+              <span>📥</span> استيراد Excel / CSV
             </button>
             <button class="btn btn-outline" style="padding: 10px 20px; font-size: 0.9rem; border-color: var(--card-border);" onclick="exportShootersExcel()">
               <span>📤</span> تصدير إكسل
@@ -458,6 +463,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script>
     // Storage with safe fallback for file:// protocol
     const memory = {};
@@ -671,10 +677,14 @@
     function renderShootersDropdown() {
       const list = getShooters();
       const sel = document.getElementById('shooter-select');
+      const datalist = document.getElementById('shooters-datalist');
       sel.innerHTML = '<option value="">-- اختر رامي من القائمة --</option>';
       list.forEach((s, idx) => {
         sel.innerHTML += '<option value="' + idx + '">' + s.name + (s.rank ? ' (' + s.rank + ')' : '') + '</option>';
       });
+      if (datalist) {
+        datalist.innerHTML = list.map(s => '<option value="' + String(s.name || '').replace(/"/g, '&quot;') + '"></option>').join('');
+      }
     }
 
     function onSelectShooter() {
@@ -682,6 +692,36 @@
       if (idx !== '') {
         const s = getShooters()[idx];
         document.getElementById('manual-name').value = s.name;
+        updateShooterSearchHint('تم اختيار: ' + s.name, true);
+      }
+    }
+
+    function updateShooterSearchHint(message, success) {
+      const hint = document.getElementById('shooter-search-hint');
+      if (!hint) return;
+      hint.textContent = message;
+      hint.style.color = success ? 'var(--success)' : 'var(--text-muted)';
+    }
+
+    function searchShooterName(value) {
+      const query = String(value || '').trim().toLowerCase();
+      const list = getShooters();
+      const matches = query ? list.filter(s => String(s.name || '').toLowerCase().includes(query)) : [];
+      const exactIndex = list.findIndex(s => String(s.name || '').trim().toLowerCase() === query);
+      const select = document.getElementById('shooter-select');
+      if (exactIndex >= 0) {
+        select.value = String(exactIndex);
+        updateShooterSearchHint('تم العثور على الرامي: ' + list[exactIndex].name, true);
+      } else if (!query) {
+        select.value = '';
+        updateShooterSearchHint('اكتب جزءًا من الاسم ثم اختر الرامي من الاقتراحات', false);
+      } else if (matches.length === 1) {
+        const idx = list.indexOf(matches[0]);
+        select.value = String(idx);
+        updateShooterSearchHint('رامٍ مطابق: ' + matches[0].name, true);
+      } else {
+        select.value = '';
+        updateShooterSearchHint(matches.length ? 'نتائج مطابقة: ' + matches.length : 'لا يوجد رامي مطابق لهذا البحث', false);
       }
     }
 
@@ -856,17 +896,21 @@
       }
     }
 
-    // ====== Import with encoding fix ======
+    // ====== Import Excel / CSV ======
     function importShootersExcel() {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.csv,.txt';
+      input.accept = '.xlsx,.xls,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv';
       input.onchange = function(e) {
         const file = e.target.files[0];
         if (!file) return;
         pendingImportFile = file;
-        // فتح نافذة اختيار الترميز
-        document.getElementById('encoding-modal').classList.add('active');
+        const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+        if (isExcel) {
+          confirmImport();
+        } else {
+          document.getElementById('encoding-modal').classList.add('active');
+        }
       };
       input.click();
     }
@@ -881,26 +925,34 @@
       
       const encoding = document.getElementById('encoding-select').value;
       const file = pendingImportFile;
+      const isExcel = /\.(xlsx|xls)$/i.test(file.name);
       
       const reader = new FileReader();
       reader.onload = function(evt) {
         try {
-          let text = evt.target.result;
+          let rows = [];
+          if (isExcel) {
+            if (typeof XLSX === 'undefined') throw new Error('تعذر تحميل مكتبة قراءة Excel. تحقق من اتصال الإنترنت ثم أعد المحاولة.');
+            const workbook = XLSX.read(evt.target.result, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+          }
+          let text = isExcel ? '' : evt.target.result;
           
           // إذا كان الترميز UTF-8، نحاول اكتشاف BOM وإزالته
           if (encoding === 'UTF-8') {
             text = text.replace(/^\uFEFF/, '');
           }
           
-          const lines = text.split(/\r?\n/).filter(l => l.trim());
-          if (lines.length < 2) {
+          const lines = isExcel ? [] : text.split(/\r?\n/).filter(l => l.trim());
+          if ((isExcel && rows.length < 1) || (!isExcel && lines.length < 2)) {
             alert('الملف فارغ أو غير صالح');
             closeEncodingModal();
             return;
           }
           
-          // كشف الفاصل (فاصلة أو فاصلة منقوطة أو Tab)
-          const firstLine = lines[0];
+          // كشف الفاصل في CSV (فاصلة أو فاصلة منقوطة أو Tab)
+          const firstLine = lines[0] || '';
           let separator = ',';
           if (firstLine.includes(';') && !firstLine.includes(',')) separator = ';';
           else if (firstLine.includes('\t')) separator = '\t';
@@ -908,8 +960,9 @@
           const list = getShooters();
           let added = 0;
           
-          for (let i = 1; i < lines.length; i++) {
-            const parts = lines[i].split(separator).map(p => p.replace(/^"|"$/g, '').trim());
+          const dataRows = isExcel ? rows.slice(1) : lines.slice(1).map(line => line.split(separator).map(p => p.replace(/^"|"$/g, '').trim()));
+          for (const row of dataRows) {
+            const parts = isExcel ? row.map(p => String(p ?? '').trim()) : row;
             if (parts.length >= 1 && parts[0]) {
               list.push({
                 name: parts[0] || '-',
@@ -924,15 +977,16 @@
           saveShooters(list);
           renderShooters();
           closeEncodingModal();
-          alert(`تم استيراد ${added} رامي بنجاح!`);
+          alert(`تم استيراد ${added} رامي بنجاح من ملف ${isExcel ? 'Excel' : 'CSV'}!`);
         } catch(err) {
           alert('حدث خطأ أثناء قراءة الملف: ' + err.message);
           closeEncodingModal();
         }
       };
       
-      // قراءة الملف بالترميز المحدد
-      reader.readAsText(file, encoding);
+      // Excel يحتاج ArrayBuffer، أما CSV فيُقرأ بالترميز المحدد
+      if (isExcel) reader.readAsArrayBuffer(file);
+      else reader.readAsText(file, encoding);
     }
 
     function exportShootersExcel() {
