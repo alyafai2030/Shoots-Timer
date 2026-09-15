@@ -2,7 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>نظام رماية التوقيت المعتمد</title>
   <style>
     :root {
@@ -145,11 +148,44 @@
       .stage-target { font-size: .65rem; }
       .timer-display { margin: 10px 0 14px; }
     }
+    @media (max-width: 480px) {
+      body { min-width: 0; overflow-x: hidden; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+      header { padding-top: calc(10px + env(safe-area-inset-top)); padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); }
+      .container { width: 100%; max-width: 100%; margin: 14px auto 24px; padding-inline: 10px; }
+      .container > .card:first-child { padding: 14px; margin-bottom: 12px; }
+      .container > .card:first-child > div:last-child { width: 100%; justify-content: space-between; }
+      .container > .card:first-child > div:last-child span:last-child { font-size: .7rem; }
+      .card { padding: 14px; margin-bottom: 12px; }
+      .card-title { margin-bottom: 11px; }
+      .nav-tabs { margin-inline: -2px; }
+      .tab-btn { min-height: 42px; padding: 8px 11px; font-size: .78rem; }
+      .btn { min-height: 44px; }
+      .timer-display { font-size: 3.45rem; min-height: 112px; display: flex; align-items: center; justify-content: center; }
+      .stage-row { grid-template-columns: minmax(0, 1fr) 64px 58px 28px; gap: 4px; padding: 11px 0; }
+      .stage-info { min-width: 0; }
+      .stage-info strong { font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .stage-target { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .61rem; }
+      .time-input { min-height: 40px; font-size: .78rem; }
+      .hit-toggle { min-height: 40px; font-size: .66rem; padding: 5px 2px; }
+      .score-badge { font-size: .95rem; }
+      .total-box { padding: 12px 14px; margin-top: 12px; }
+      .total-val { font-size: 1.8rem; }
+      .input-field, select { min-height: 44px; margin-bottom: 9px; }
+      #manual-name { font-size: .88rem; }
+      #shooter-search-hint { line-height: 1.5; }
+      .modal-box { max-height: calc(100dvh - 32px); overflow-y: auto; }
+    }
+    @media (max-width: 380px) {
+      .stage-row { grid-template-columns: minmax(0, 1fr) 58px 52px 24px; }
+      .stage-info strong { font-size: .69rem; }
+      .stage-target { font-size: .56rem; }
+      .timer-display { font-size: 3rem; }
+    }
     @media (max-width: 430px) {
       .logo-icon { width: 36px; height: 36px; font-size: 17px; }
       .title { font-size: .95rem; }
       .title::after { display: none; }
-      .stage-row { grid-template-columns: 1fr 64px 58px 30px; }
+      .stage-row { grid-template-columns: minmax(0,1fr) 64px 58px 30px; }
       .hit-toggle { font-size: .68rem; padding: 6px 3px; }
       .time-input { font-size: .82rem; padding: 6px 2px; }
     }
