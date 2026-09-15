@@ -240,6 +240,7 @@
       #tab-results .card > div[style*="overflow-x"] { overflow: visible !important; }
       #tab-shooters .card-title, #tab-results .card-title { flex-wrap: wrap; }
       #manual-name { margin-bottom: 5px; }
+      .shooter-suggestions { max-height: 210px; }
     }
     @media (max-width: 380px) {
       .stage-row { grid-template-columns: minmax(0, 1fr) 58px 52px 24px; }
@@ -299,8 +300,9 @@
               <option value="">-- اختر رامي من القائمة --</option>
             </select>
             <div style="position:relative;">
-              <input type="search" id="manual-name" class="input-field" list="shooters-datalist" autocomplete="off" placeholder="ابحث واختر اسم الرامي..." oninput="searchShooterName(this.value)" style="padding-inline-end:42px;">
+              <input type="search" id="manual-name" class="input-field" list="shooters-datalist" autocomplete="off" placeholder="ابحث واختر اسم الرامي..." oninput="searchShooterName(this.value)" onfocus="renderShooterSuggestions(this.value)" onkeydown="handleShooterSearchKey(event)" style="padding-inline-end:42px;">
               <span aria-hidden="true" style="position:absolute;inset-inline-end:14px;top:10px;color:var(--accent);font-size:1.05rem;pointer-events:none;">⌕</span>
+              <div id="shooter-suggestions" class="shooter-suggestions" role="listbox" style="display:none;position:absolute;z-index:20;inset-inline:0;top:calc(100% - 5px);background:#0b1728;border:1px solid var(--accent);border-radius:0 0 10px 10px;box-shadow:0 14px 30px rgba(0,0,0,.35);overflow-y:auto;"></div>
             </div>
             <datalist id="shooters-datalist"></datalist>
             <div id="shooter-search-hint" style="font-size:.75rem;color:var(--text-muted);margin-top:-3px;">اكتب جزءًا من الاسم ثم اختر الرامي من الاقتراحات</div>
@@ -805,6 +807,50 @@
       hint.style.color = success ? 'var(--success)' : 'var(--text-muted)';
     }
 
+    function escapeShooterText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[ch]));
+    }
+
+    function renderShooterSuggestions(value) {
+      const box = document.getElementById('shooter-suggestions');
+      if (!box) return;
+      const query = String(value || '').trim().toLowerCase();
+      const list = getShooters();
+      const matches = list.map((s, idx) => ({ ...s, idx })).filter(s => !query || String(s.name || '').toLowerCase().includes(query));
+      if (!matches.length) {
+        box.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:.8rem;text-align:center;">لا توجد أسماء مطابقة</div>';
+      } else {
+        box.innerHTML = matches.map(s => `<button type="button" class="shooter-suggestion" data-index="${s.idx}" style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:transparent;border:0;border-bottom:1px solid rgba(148,163,184,.12);color:var(--text);cursor:pointer;text-align:right;font:inherit;"><strong>${escapeShooterText(s.name)}</strong><span style="color:var(--text-muted);font-size:.72rem;">${escapeShooterText(s.team || '')}</span></button>`).join('');
+        box.querySelectorAll('.shooter-suggestion').forEach(button => {
+          button.addEventListener('mousedown', event => event.preventDefault());
+          button.addEventListener('click', () => chooseShooter(Number(button.dataset.index)));
+        });
+      }
+      box.style.display = 'block';
+    }
+
+    function chooseShooter(index) {
+      const shooter = getShooters()[index];
+      if (!shooter) return;
+      document.getElementById('manual-name').value = shooter.name || '';
+      document.getElementById('shooter-select').value = String(index);
+      updateShooterSearchHint('تم اختيار الرامي: ' + shooter.name, true);
+      closeShooterSuggestions();
+    }
+
+    function closeShooterSuggestions() {
+      const box = document.getElementById('shooter-suggestions');
+      if (box) box.style.display = 'none';
+    }
+
+    function handleShooterSearchKey(event) {
+      if (event.key === 'Escape') closeShooterSuggestions();
+      if (event.key === 'Enter') {
+        const first = document.querySelector('#shooter-suggestions .shooter-suggestion');
+        if (first) { event.preventDefault(); chooseShooter(Number(first.dataset.index)); }
+      }
+    }
+
     function searchShooterName(value) {
       const query = String(value || '').trim().toLowerCase();
       const list = getShooters();
@@ -825,6 +871,7 @@
         select.value = '';
         updateShooterSearchHint(matches.length ? 'نتائج مطابقة: ' + matches.length : 'لا يوجد رامي مطابق لهذا البحث', false);
       }
+      renderShooterSuggestions(value);
     }
 
     function selectShooterForScoring(idx) {
@@ -1379,6 +1426,11 @@
     renderShootersDropdown();
     const dateNode = document.getElementById('today-date');
     if (dateNode) dateNode.textContent = new Intl.DateTimeFormat('ar-SA', { dateStyle: 'medium' }).format(new Date());
+    document.addEventListener('click', (event) => {
+      const searchBox = document.getElementById('manual-name');
+      const suggestions = document.getElementById('shooter-suggestions');
+      if (suggestions && searchBox && !suggestions.contains(event.target) && event.target !== searchBox) closeShooterSuggestions();
+    });
 
     // Keyboard spacebar shortcut for toggle timer
     window.addEventListener('keydown', (e) => {
